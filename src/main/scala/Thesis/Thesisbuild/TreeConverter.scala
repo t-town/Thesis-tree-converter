@@ -73,7 +73,7 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : List[Attribu
 	    var rule1 = combineEffect(policy,Permit)
 	    var rule2 = combineEffect(policy,Deny)
 	    var subpolicies: List[AbstractPolicy] = List(rule1,rule2)
-	    //TODO: rekening houden met nullpointers uit combineEffect
+	    subpolicies.filter(c => c == null)
 	    newPolicy = new Policy(policy.id)(policy.target,ca,subpolicies,policy.obligations)
 	  }else {
 		newPolicy = createFAChain(policy)
@@ -85,18 +85,16 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : List[Attribu
 	  var subpols = policy.subpolicies
 	  var children = subpols.filter(c => (c.asInstanceOf[Rule]).effect == effect)
 	  var conditions = List[Expression]()
-	  var newObs = List[ObligationAction]()
 	  var newRule:Rule = null
 	  if(children.length > 0){
 	    for(c <- children){
 	    	conditions ::= c.asInstanceOf[Rule].condition
-	    	newObs :::= c.asInstanceOf[Rule].obligationActions
 	    }
 	    var newExpression = conditions(0)
 	    for(i <- 1 to conditions.length-1){
 	      newExpression = newExpression | conditions(i)
 	    }
-	    newRule = new Rule(children(0).id)(effect,newExpression,newObs)
+	    newRule = new Rule(children(0).id)(effect,newExpression,List[ObligationAction]())
 	  }
 	  return newRule
 	}
@@ -106,7 +104,7 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : List[Attribu
 	  var newPol = FAChain(policy.subpolicies.map(x => x.asInstanceOf[Rule]), 0 , policy.id)
 	  var children = parent.asInstanceOf[Policy].subpolicies
 	  children = replace(children, policy,newPol)
-	  //TODO fix parent reference
+	  parent.asInstanceOf[Policy].subpolicies = children
 	  return getLowestPolicies(newPol).head
 	}
 	
@@ -129,18 +127,54 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : List[Attribu
 		if(rules.length > 2) 
 		  rightChild = FAChain(rules.tail,id+1,startstring) 
 		children = List(leftChild,rightChild)
-		//TODO fix policy obligations
-		return new Policy(startstring + id.toString)(true,Ca,children,null)
+		return new Policy(startstring + id.toString)(true,Ca,children,List[Obligation]())
 	}
 	
 	def convertCA(policy: Policy, ca: CombinationAlgorithm) : Policy = {
-	  //TODO implement
-	  return policy
+	  if(policy.pca == ca)
+	   return policy
+	  //TODO implement if-else
+	   var newpolicy: Policy = null
+	   if(ca == PermitOverrides && policy.pca == DenyOverrides){
+	     
+	   }else if(ca == PermitOverrides && policy.pca == FirstApplicable){
+	     
+	   }else if(ca == DenyOverrides && policy.pca == FirstApplicable){
+	     
+	   }else if(ca == DenyOverrides && policy.pca == PermitOverrides){
+	     
+	   }else if(ca == FirstApplicable && policy.pca == PermitOverrides){
+	     
+	   }else if(ca == FirstApplicable && policy.pca == DenyOverrides){
+	     
+	   }
+	  return newpolicy
 	}
 	
 	def combinePolicies(child : Policy, parent : Policy) : Policy = {
-	  //TODO implement
+	  val target = child.target
+	  var subpolicies = List[AbstractPolicy]()
+	  for(c <- child.subpolicies){
+	    var r = c.asInstanceOf[Rule]
+	    r =  new Rule(c.id)(r.effect,target & r.condition, List[ObligationAction]())
+	    r.parent = Some(parent)
+	    subpolicies ::= r
+	  }
+	  subpolicies = combineChildren(parent,child,subpolicies)
+      parent.subpolicies = subpolicies
 	  return parent
+	}
+	
+	def combineChildren(parent: Policy, child: Policy, rules : List[AbstractPolicy]) : List[AbstractPolicy] = {
+	  var resultList = List[AbstractPolicy]()
+	  for(c <- parent.subpolicies){
+	    if(c == child)
+	      resultList :::= rules
+	    else
+	      resultList ::= c
+	    c.parent = Some(parent)
+	  }
+	  return resultList
 	}
 
 }
