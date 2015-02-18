@@ -77,16 +77,15 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : List[Attribu
 	    var rule1 = combineEffect(policy,Permit)
 	    var rule2 = combineEffect(policy,Deny)
 	    var subpolicies: List[AbstractPolicy] = List(rule1,rule2)
-	    subpolicies.filter(c => c == null)
+	    subpolicies = subpolicies.filter(c => c != null)
 	    newPolicy = new Policy(policy.id)(policy.target,ca,subpolicies,policy.obligations)
+	    newPolicy.parent = policy.parent
+	    newPolicy.parent match {
+	    	case Some(x) => x.subpolicies = replace(x.subpolicies,policy,newPolicy)
+	    	case None => 
+	    }
 	  }else {
 		newPolicy = createFAChain(policy)
-	  }
-	  newPolicy.parent = policy.parent
-	  var subpolicies = List[AbstractPolicy]()
-	  newPolicy.parent match {
-	    case Some(x) => x.subpolicies = replace(x.subpolicies,policy,newPolicy)
-	    case None => 
 	  }
 	  return newPolicy
 	}

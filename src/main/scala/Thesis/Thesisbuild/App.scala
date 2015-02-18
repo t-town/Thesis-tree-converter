@@ -2,6 +2,7 @@ package Thesis.Thesisbuild
 
 import stapl.core._
 import stapl.core.pdp._
+import stapl.examples.policies.EhealthPolicy
 
 /**
  * @author ${user.name}
@@ -12,12 +13,13 @@ object App {
   
   def main(args : Array[String]) {
   import ExamplePolicy._
-  val pdp = new PDP(policy)
-  val converter = new TreeConverter(testpolicy, null)
+  val ehealth = EhealthPolicy.naturalPolicy
+  val pdp = new PDP(ehealth)
+  val converter = new TreeConverter(ehealth, null)
   //test shit here
-  var policyreduce = converter.createFAChain(chainpolicy)
+  var policyreduce = converter.reduce(ehealth)
   println(policyreduce.subpolicies.length)
-  for(p <- policyreduce.subpolicies) println(p.toString())
+  for(p <- policyreduce.subpolicies) {println(p.isInstanceOf[Rule]);println(p.toString())}
   println(policyreduce.parent.toString())
   /*println(pdp.evaluate("subject1", "view", "resource1", 
           subject.roles -> List("physician"))) // will return Permit
