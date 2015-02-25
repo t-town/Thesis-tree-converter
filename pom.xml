@@ -40,6 +40,12 @@
     <artifactId>stapl-examples</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     </dependency>
+    
+    <dependency>
+    	<groupId>stapl</groupId>
+    	<artifactId>stapl-templates</artifactId>
+    	<version>0.0.1-SNAPSHOT</version>
+    </dependency>
 
     <!-- Test -->
     <dependency>

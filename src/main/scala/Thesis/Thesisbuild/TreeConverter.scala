@@ -121,7 +121,7 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : List[Attribu
 	
 	def replace(policies : List[AbstractPolicy], policy:Policy, newPolicy : Policy) : List[AbstractPolicy] = {
 	  var resList = List[AbstractPolicy]()
-	  for(x <- policies){
+	  for(x <- policies.reverse){
 	    if(x == policy) resList ::= newPolicy else resList ::= x
 	  }
 	  return resList
@@ -151,15 +151,15 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : List[Attribu
 	     }else if(policy.subpolicies(0).asInstanceOf[Rule].effect == Permit){
 	       var A:Rule = policy.subpolicies(0).asInstanceOf[Rule]
 	       var B:Rule = policy.subpolicies(1).asInstanceOf[Rule]
-	       var newrule = new Rule(A.id)(Permit,A.condition & !(B.condition),List[ObligationAction]())
+	       var newrule = new Rule(A.id)(Permit,And(A.condition,Not(B.condition)),List[ObligationAction]())
 	       var subpolicies:List[AbstractPolicy] = List(B, newrule)
-	       newpolicy = new Policy(policy.id)(policy.target,PermitOverrides,policy.subpolicies)
+	       newpolicy = new Policy(policy.id)(policy.target,PermitOverrides,subpolicies)
 	     }else{
 	       var A:Rule = policy.subpolicies(0).asInstanceOf[Rule]
 	       var B:Rule = policy.subpolicies(1).asInstanceOf[Rule]
-	       var newrule = new Rule(B.id)(Permit,!(A.condition) & B.condition,List[ObligationAction]())
+	       var newrule = new Rule(B.id)(Permit,And(Not(A.condition),B.condition),List[ObligationAction]())
 	       var subpolicies:List[AbstractPolicy] = List(A, newrule)
-	       newpolicy = new Policy(policy.id)(policy.target,PermitOverrides,policy.subpolicies)
+	       newpolicy = new Policy(policy.id)(policy.target,PermitOverrides,subpolicies)
 	     }
 	   }else if(ca == PermitOverrides && policy.pca == FirstApplicable){
 	     if(policy.subpolicies.length == 1 || policy.subpolicies(0).asInstanceOf[Rule].effect == Permit ){
@@ -182,15 +182,15 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : List[Attribu
 	     }else if(policy.subpolicies(0).asInstanceOf[Rule].effect == Permit){
 	       var A:Rule = policy.subpolicies(0).asInstanceOf[Rule]
 	       var B:Rule = policy.subpolicies(1).asInstanceOf[Rule]
-	       var newrule = new Rule(B.id)(Deny,!A.condition & B.condition,List[ObligationAction]())
+	       var newrule = new Rule(B.id)(Deny,(!A.condition) & B.condition,List[ObligationAction]())	
 	       var subpolicies:List[AbstractPolicy] = List(A, newrule)
-	       newpolicy = new Policy(policy.id)(policy.target,PermitOverrides,policy.subpolicies)
+	       newpolicy = new Policy(policy.id)(policy.target,PermitOverrides,subpolicies)
 	     }else{
 	       var A:Rule = policy.subpolicies(0).asInstanceOf[Rule]
 	       var B:Rule = policy.subpolicies(1).asInstanceOf[Rule]
-	       var newrule = new Rule(A.id)(Deny,A.condition & !B.condition,List[ObligationAction]())
+	       var newrule = new Rule(A.id)(Deny,A.condition & (!B.condition),List[ObligationAction]())
 	       var subpolicies:List[AbstractPolicy] = List(newrule,B)
-	       newpolicy = new Policy(policy.id)(policy.target,PermitOverrides,policy.subpolicies)
+	       newpolicy = new Policy(policy.id)(policy.target,PermitOverrides,subpolicies)
 	     }
 	   }else if(ca == FirstApplicable && policy.pca == PermitOverrides){
 	     if(policy.subpolicies(0).asInstanceOf[Rule].effect == Permit){

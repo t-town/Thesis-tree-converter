@@ -39,6 +39,7 @@ import stapl.core.Deny
 import stapl.core.Permit
 import stapl.core.log
 import Thesis.Thesisbuild.TreeConverter
+import stapl.core.Rule
 
 object EhealthPolicyTest {
   
@@ -55,6 +56,7 @@ class EhealthPolicyTest extends AssertionsForJUnit {
   // set up the PDP, use an empty attribute finder since we will provide all attributes in the request
   //val pdp = new PDP(javaLikePolicy, new AttributeFinder)
   val converter = new TreeConverter(naturalPolicy, null)
+  for(p <- converter.reduce(naturalPolicy).subpolicies) {println(p.asInstanceOf[Rule].condition.toString());println(p.asInstanceOf[Rule].effect.toString())}
   val pdp = new PDP(converter.reduce(naturalPolicy), new AttributeFinder)
 
   @Before def setup() {
