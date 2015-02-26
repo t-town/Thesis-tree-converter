@@ -237,7 +237,7 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : List[Attribu
 	def combinePolicies(child : Policy, parent : Policy) : Policy = {
 	  val target = child.target
 	  var subpolicies = List[AbstractPolicy]()
-	  for(c <- child.subpolicies){
+	  for(c <- child.subpolicies.reverse){
 	    var r = c.asInstanceOf[Rule]
 	    r =  new Rule(c.id)(r.effect,target & r.condition, List[ObligationAction]())
 	    r.parent = Some(parent)
@@ -250,7 +250,7 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : List[Attribu
 	
 	def combineChildren(parent: Policy, child: Policy, rules : List[AbstractPolicy]) : List[AbstractPolicy] = {
 	  var resultList = List[AbstractPolicy]()
-	  for(c <- parent.subpolicies){
+	  for(c <- parent.subpolicies.reverse){
 	    if(c == child)
 	      resultList :::= rules
 	    else
