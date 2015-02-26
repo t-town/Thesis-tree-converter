@@ -129,10 +129,7 @@ class EhealthPolicyTest extends AssertionsForJUnit {
         subject.department -> "cardiology",
         resource.type_ -> "patientstatus",
         resource.owner_withdrawn_consents -> List("subject1","subject2","subject3")) === 
-          Result(Permit,List(
-              log(subject.id + " performed breaking-the-glass procedure"),
-              log("permit because of breaking-the-glass procedure")
-          )))
+          Result(Permit,List()))
   }
 
   @Test def testPermitPhysicianEmergency2() {        
@@ -163,10 +160,7 @@ class EhealthPolicyTest extends AssertionsForJUnit {
         subject.department -> "cardiology",
         resource.type_ -> "patientstatus",
         resource.owner_withdrawn_consents -> List("subject1","subject2","subject3","maarten")) === 
-          Result(Permit,List(
-              log(subject.id + " performed breaking-the-glass procedure"), // TODO subject.id should be evaluated to a value
-              log("permit because of breaking-the-glass procedure")
-          )))
+          Result(Permit,List()))
   }
   
   @Test def testPermitNurseOfElderCareDepartment {

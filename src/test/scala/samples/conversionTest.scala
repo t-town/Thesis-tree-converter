@@ -63,6 +63,89 @@ object ExamplePolicy extends BasicPolicy with GeneralTemplates{
 	      stapl.core.Rule("policy:25") := permit
     )
   
+  val testPhysicians = Policy("policyset:2") := when ("physician" in subject.roles) apply FirstApplicable to (      
+      // Of the physicians, only gps, physicians of the cardiology department, physicians of the elder care department and physicians of the emergency department can access the monitoring system.
+      stapl.core.Rule("policy:3") := deny iff !((subject.department === "cardiology") | (subject.department === "elder_care") | (subject.department === "emergency") | ("gp" in subject.roles)),
+      
+      // All of the previous physicians except for the GPs can access the monitoring system in case of emergency.
+      stapl.core.Rule("policy:4") := permit iff (((subject.department === "cardiology") | (subject.department === "elder_care") | (subject.department === "emergency"))
+                                      & (subject.triggered_breaking_glass | resource.operator_triggered_emergency | resource.indicates_emergency)),
+      
+      // For GPs: only permit if in consultation or treated in the last six months or primary physician or responsible in the system.
+      OnlyPermitIff("policyset:3")("gp" in subject.roles)(
+          (resource.owner_id === subject.current_patient_in_consultation)
+          | (resource.owner_id in subject.treated_in_last_six_months)
+          | (resource.owner_id in subject.primary_patients)
+          | (subject.id in resource.owner_responsible_physicians)
+      ),
+      
+      // For cardiologists.
+      Policy("policyset:4") := when (subject.department === "cardiology") apply PermitOverrides to (        
+        // Permit for head physician.
+        stapl.core.Rule("policy:7") := permit iff (subject.is_head_physician),
+        
+        // Permit if treated the patient or treated in team.
+        stapl.core.Rule("policy:8") := permit iff (resource.owner_id in subject.treated) | (resource.owner_id in subject.treated_by_team),
+        
+        stapl.core.Rule("policy:9") := deny
+      ),
+      
+      // For physicians of elder care department: only permit if admitted in care unit or treated in the last six months.
+      OnlyPermitIff("policyset:5")(subject.department === "elder_care")(
+          (resource.owner_id in subject.admitted_patients_in_care_unit)
+          | (resource.owner_id in subject.treated_in_last_six_months)
+      ),
+      
+      // For physicians of emergency department: only permit if patient status is bad (or the above).
+      OnlyPermitIff("policyset:6")(subject.department === "emergency")(   
+          resource.patient_status === "bad"
+      )
+    )
+  
+  val testNurses = Policy("policyset:7") := when ("nurse" in subject.roles) apply FirstApplicable to (      
+      // Of the nurses, only nurses of the cardiology department or the elder care department can access the PMS.
+      stapl.core.Rule("policy:14") := deny iff !((subject.department === "cardiology") | (subject.department === "elder_care")),
+      
+      // Nurses can only access the PMS during their shifts.
+      stapl.core.Rule("policy:15") := deny iff !((environment.currentDateTime gteq subject.shift_start) & (environment.currentDateTime lteq subject.shift_stop)),
+      
+      // Nurses can only access the PMS from the hospital.
+      stapl.core.Rule("policy:16") := deny iff !(subject.location === "hospital"),
+      
+      // Nurses can only view the patient's status of the last five days.
+      stapl.core.Rule("policy:17") := deny iff !(environment.currentDateTime lteq (resource.created + 5.days)),
+      
+      // For nurses of cardiology department: they can only view the patient status of a patient 
+      // in their nurse unit for whom they are assigned responsible, up to three days after they were discharged.
+      OnlyPermitIff("policyset:8")(subject.department === "cardiology")(
+          (resource.owner_id in subject.admitted_patients_in_nurse_unit) 
+          	& (!resource.owner_discharged | (environment.currentDateTime lteq (resource.owner_discharged_dateTime + 3.days)))
+      ),
+        
+      // For nurses of the elder care department.
+      Policy("policyset:9") := when (subject.department === "elder_care") apply DenyOverrides to (
+        // Of the nurses of the elder care department, only nurses who have been allowed to use the PMS can access the PMS.
+        stapl.core.Rule("policy:20") := deny iff !subject.allowed_to_access_pms,
+        
+        // Nurses of the elder care department can only view the patient status of a patient 
+        // who is currently admitted to their nurse unit and for whome they are assigned responsible.
+        OnlyPermitIff("policySet:10")(AlwaysTrue)(
+            (resource.owner_id in subject.admitted_patients_in_nurse_unit) 
+            	& (resource.owner_id in subject.responsible_patients)
+        )
+      )
+    )
+  
+  val testPatients = Policy("policyset:11") := when ("patient" in subject.roles) apply FirstApplicable to (      
+	      // A patient can only access the PMS if (still) allowed by the hospital (e.g., has 
+    	  // subscribed to the PMS, but is not paying any more).
+	      stapl.core.Rule("policy:23") := deny iff !subject.allowed_to_access_pms,
+	      
+	      // A patient can only view his own status.
+	      stapl.core.Rule("policy:24") := deny iff !(resource.owner_id === subject.id),
+	      
+	      stapl.core.Rule("policy:25") := permit
+    )
   }
 
 @Test
@@ -305,6 +388,124 @@ class conversionTest{
         environment.currentDateTime -> new LocalDateTime(2014, 6, 24, 14, 2, 1))
     assert(res1 == res2)
     
+  }
+  
+  @Test
+  def PhysicianTest() {
+    val converter = new TreeConverter(testPhysicians, null)
+    var pdp = new PDP(converter.reduce(testPhysicians), new AttributeFinder)
+    var res1 = pdp.evaluate("maarten", "view", "doc123",
+        subject.roles -> List("medical_personnel", "nurse"),
+        subject.triggered_breaking_glass -> false,
+        subject.department -> "elder_care",
+        subject.allowed_to_access_pms -> true,
+        subject.shift_start -> new LocalDateTime(2014, 6, 24, 9, 0, 0),
+        subject.shift_stop -> new LocalDateTime(2014, 6, 24, 17, 0, 0),
+        subject.location -> "hospital",
+        subject.admitted_patients_in_nurse_unit -> List("patientX", "patientY"),
+        subject.responsible_patients -> List("patientX", "patientZ"),
+        resource.owner_id -> "patientX",
+        resource.owner_withdrawn_consents -> List("subject1"),
+        resource.type_ -> "patientstatus",
+        resource.created -> new LocalDateTime(2014, 6, 22, 14, 2, 1), // three days ago
+        environment.currentDateTime -> new LocalDateTime(2014, 6, 24, 14, 2, 1))
+        
+    pdp = new PDP(testPhysicians, new AttributeFinder)
+    var res2 = pdp.evaluate("maarten", "view", "doc123",
+        subject.roles -> List("medical_personnel", "nurse"),
+        subject.triggered_breaking_glass -> false,
+        subject.department -> "elder_care",
+        subject.allowed_to_access_pms -> true,
+        subject.shift_start -> new LocalDateTime(2014, 6, 24, 9, 0, 0),
+        subject.shift_stop -> new LocalDateTime(2014, 6, 24, 17, 0, 0),
+        subject.location -> "hospital",
+        subject.admitted_patients_in_nurse_unit -> List("patientX", "patientY"),
+        subject.responsible_patients -> List("patientX", "patientZ"),
+        resource.owner_id -> "patientX",
+        resource.owner_withdrawn_consents -> List("subject1"),
+        resource.type_ -> "patientstatus",
+        resource.created -> new LocalDateTime(2014, 6, 22, 14, 2, 1), // three days ago
+        environment.currentDateTime -> new LocalDateTime(2014, 6, 24, 14, 2, 1))
+    assert(res1 == res2)
+    
+  }
+  
+  @Test
+  def NurseTest() {
+    val converter = new TreeConverter(testNurses, null)
+    var pdp = new PDP(converter.reduce(testNurses), new AttributeFinder)
+    var res1 = pdp.evaluate("maarten", "view", "doc123",
+        subject.roles -> List("medical_personnel", "nurse"),
+        subject.triggered_breaking_glass -> false,
+        subject.department -> "elder_care",
+        subject.allowed_to_access_pms -> true,
+        subject.shift_start -> new LocalDateTime(2014, 6, 24, 9, 0, 0),
+        subject.shift_stop -> new LocalDateTime(2014, 6, 24, 17, 0, 0),
+        subject.location -> "hospital",
+        subject.admitted_patients_in_nurse_unit -> List("patientX", "patientY"),
+        subject.responsible_patients -> List("patientX", "patientZ"),
+        resource.owner_id -> "patientX",
+        resource.owner_withdrawn_consents -> List("subject1"),
+        resource.type_ -> "patientstatus",
+        resource.created -> new LocalDateTime(2014, 6, 22, 14, 2, 1), // three days ago
+        environment.currentDateTime -> new LocalDateTime(2014, 6, 24, 14, 2, 1))
+        
+    pdp = new PDP(testNurses, new AttributeFinder)
+    var res2 = pdp.evaluate("maarten", "view", "doc123",
+        subject.roles -> List("medical_personnel", "nurse"),
+        subject.triggered_breaking_glass -> false,
+        subject.department -> "elder_care",
+        subject.allowed_to_access_pms -> true,
+        subject.shift_start -> new LocalDateTime(2014, 6, 24, 9, 0, 0),
+        subject.shift_stop -> new LocalDateTime(2014, 6, 24, 17, 0, 0),
+        subject.location -> "hospital",
+        subject.admitted_patients_in_nurse_unit -> List("patientX", "patientY"),
+        subject.responsible_patients -> List("patientX", "patientZ"),
+        resource.owner_id -> "patientX",
+        resource.owner_withdrawn_consents -> List("subject1"),
+        resource.type_ -> "patientstatus",
+        resource.created -> new LocalDateTime(2014, 6, 22, 14, 2, 1), // three days ago
+        environment.currentDateTime -> new LocalDateTime(2014, 6, 24, 14, 2, 1))
+    assert(res1 == res2)
+  }
+  
+  @Test
+  def PatientTest() {
+    val converter = new TreeConverter(testPatients, null)
+    var pdp = new PDP(converter.reduce(testPatients), new AttributeFinder)
+    var res1 = pdp.evaluate("maarten", "view", "doc123",
+        subject.roles -> List("medical_personnel", "nurse"),
+        subject.triggered_breaking_glass -> false,
+        subject.department -> "elder_care",
+        subject.allowed_to_access_pms -> true,
+        subject.shift_start -> new LocalDateTime(2014, 6, 24, 9, 0, 0),
+        subject.shift_stop -> new LocalDateTime(2014, 6, 24, 17, 0, 0),
+        subject.location -> "hospital",
+        subject.admitted_patients_in_nurse_unit -> List("patientX", "patientY"),
+        subject.responsible_patients -> List("patientX", "patientZ"),
+        resource.owner_id -> "patientX",
+        resource.owner_withdrawn_consents -> List("subject1"),
+        resource.type_ -> "patientstatus",
+        resource.created -> new LocalDateTime(2014, 6, 22, 14, 2, 1), // three days ago
+        environment.currentDateTime -> new LocalDateTime(2014, 6, 24, 14, 2, 1))
+     
+    pdp = new PDP(testPatients, new AttributeFinder)
+    var res2 = pdp.evaluate("maarten", "view", "doc123",
+        subject.roles -> List("medical_personnel", "nurse"),
+        subject.triggered_breaking_glass -> false,
+        subject.department -> "elder_care",
+        subject.allowed_to_access_pms -> true,
+        subject.shift_start -> new LocalDateTime(2014, 6, 24, 9, 0, 0),
+        subject.shift_stop -> new LocalDateTime(2014, 6, 24, 17, 0, 0),
+        subject.location -> "hospital",
+        subject.admitted_patients_in_nurse_unit -> List("patientX", "patientY"),
+        subject.responsible_patients -> List("patientX", "patientZ"),
+        resource.owner_id -> "patientX",
+        resource.owner_withdrawn_consents -> List("subject1"),
+        resource.type_ -> "patientstatus",
+        resource.created -> new LocalDateTime(2014, 6, 22, 14, 2, 1), // three days ago
+        environment.currentDateTime -> new LocalDateTime(2014, 6, 24, 14, 2, 1))
+    assert(res1 == res2)
   }
   
 }

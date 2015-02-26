@@ -26,8 +26,11 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : List[Attribu
 	   }
 	  }
 	  var result = policy
-	  if(policy.subpolicies.length>2) 
-	    result = reduceLeaves(policy)
+	  if(policy.subpolicies.length>2)
+	    if(policy.pca == FirstApplicable)
+	       result = reduce(getHighestParent(reduceLeaves(policy)))
+	    else
+	    	result = reduceLeaves(policy)
 	 return result
 	}
 	
@@ -52,6 +55,18 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : List[Attribu
 	****************************************************************************
 	****************************************************************************/
 	
+	def getHighestParent(policy:Policy): Policy = {
+	  var continueLoop = true
+	  var result = policy
+	  while(continueLoop){
+		result.parent match {
+			case Some(x) => result = x
+			case None => continueLoop = false
+		}
+	  }
+	  return result
+	}
+	
 	def hasPolicyChildren(policy:Policy) = policy.subpolicies.exists(_.isInstanceOf[Policy]) 
 	
 	def getLowestPolicies(policy:Policy) : List[Policy] = {
@@ -65,7 +80,9 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : List[Attribu
 	      resultList :::= getLowestPolicies(c.asInstanceOf[Policy])
 	    }
 	  }
-	  if(includethis) return policy :: resultList else return resultList
+	  if(includethis) 
+	    return policy :: resultList 
+	  else return resultList
 	}
 	
 	def reduceLeaves(policy : Policy) : Policy = {
@@ -110,7 +127,7 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : List[Attribu
 	
 	def createFAChain(policy: Policy) : Policy = {
 	  var parent = policy.parent
-	  var newPol = FAChain(policy.subpolicies.map(x => x.asInstanceOf[Rule]), 0 , policy.id)
+	  var newPol = FAChain(policy.subpolicies.map(x => x.asInstanceOf[Rule]), 0 , policy.id,policy.target,true)
 	  newPol.parent = policy.parent
 	  newPol.parent match {
 	    case Some(x) => x.subpolicies = replace(x.subpolicies,policy,newPol)
@@ -127,7 +144,7 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : List[Attribu
 	  return resList
 	}
 	
-	def FAChain(rules : List[Rule], id : Int, startstring : String) : Policy = {
+	def FAChain(rules : List[Rule], id : Int, startstring : String, target: Expression, includeTarget : Boolean) : Policy = {
 	    var Ca:CombinationAlgorithm = DenyOverrides
 		if(rules(0).effect == Permit) {
 		  Ca = PermitOverrides
@@ -136,9 +153,12 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : List[Attribu
 		var leftChild = rules(0)
 		var rightChild:AbstractPolicy = rules(1)
 		if(rules.length > 2) 
-		  rightChild = FAChain(rules.tail,id+1,startstring) 
+		  rightChild = FAChain(rules.tail,id+1,startstring, target, false) 
 		children = List(leftChild,rightChild)
-		return new Policy(startstring + id.toString)(true,Ca,children,List[Obligation]())
+		if(includeTarget)
+		  return new Policy(startstring + id.toString)(target,Ca,children,List[Obligation]())
+		else
+		  return new Policy(startstring + id.toString)(true,Ca,children,List[Obligation]())
 	}
 	
 	def convertCA(policy: Policy, ca: CombinationAlgorithm) : Policy = {
