@@ -113,7 +113,7 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : List[Attribu
 	  var conditions = List[Expression]()
 	  var newRule:Rule = null
 	  if(children.length > 0){
-	    for(c <- children){
+	    for(c <- children.reverse){
 	    	conditions ::= c.asInstanceOf[Rule].condition
 	    }
 	    var newExpression = conditions(0)

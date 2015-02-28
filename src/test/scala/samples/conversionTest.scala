@@ -410,79 +410,43 @@ class conversionTest{
   def PhysicianTest() {
     var pdp = new PDP(testPhysicians, new AttributeFinder)
     var res2 = pdp.evaluate("maarten", "view", "doc123",
-        subject.roles -> List("medical_personnel", "nurse"),
-        subject.triggered_breaking_glass -> false,
-        subject.department -> "elder_care",
-        subject.allowed_to_access_pms -> false, // X
-        subject.shift_start -> new LocalDateTime(2014, 6, 24, 9, 0, 0),
-        subject.shift_stop -> new LocalDateTime(2014, 6, 24, 17, 0, 0),
-        subject.location -> "hospital",
-        subject.admitted_patients_in_nurse_unit -> List("patientX", "patientY"),
-        subject.responsible_patients -> List("patientX", "patientZ"),
-        resource.owner_id -> "patientX",
-        resource.owner_withdrawn_consents -> List("subject1"),
+        subject.roles -> List("medical_personnel", "physician"),
+        subject.triggered_breaking_glass -> true,
+        subject.department -> "cardiology",
         resource.type_ -> "patientstatus",
-        resource.created -> new LocalDateTime(2014, 6, 22, 14, 2, 1), // three days ago
-        environment.currentDateTime -> new LocalDateTime(2014, 6, 24, 14, 2, 1))
+        resource.owner_withdrawn_consents -> List("subject1","subject2","subject3"))
         
+        println("Physician test: " + res2.toString())
     val converter = new TreeConverter(testPhysicians, null)
     pdp = new PDP(converter.reduce(testPhysicians), new AttributeFinder)
     var res1 = pdp.evaluate("maarten", "view", "doc123",
-        subject.roles -> List("medical_personnel", "nurse"),
-        subject.triggered_breaking_glass -> false,
-        subject.department -> "elder_care",
-        subject.allowed_to_access_pms -> false, // X
-        subject.shift_start -> new LocalDateTime(2014, 6, 24, 9, 0, 0),
-        subject.shift_stop -> new LocalDateTime(2014, 6, 24, 17, 0, 0),
-        subject.location -> "hospital",
-        subject.admitted_patients_in_nurse_unit -> List("patientX", "patientY"),
-        subject.responsible_patients -> List("patientX", "patientZ"),
-        resource.owner_id -> "patientX",
-        resource.owner_withdrawn_consents -> List("subject1"),
+        subject.roles -> List("medical_personnel", "physician"),
+        subject.triggered_breaking_glass -> true,
+        subject.department -> "cardiology",
         resource.type_ -> "patientstatus",
-        resource.created -> new LocalDateTime(2014, 6, 22, 14, 2, 1), // three days ago
-        environment.currentDateTime -> new LocalDateTime(2014, 6, 24, 14, 2, 1))
+        resource.owner_withdrawn_consents -> List("subject1","subject2","subject3"))
         
     assert(res1 == res2)
-    println("Physician test: " + res2.toString())
   }
   
   @Test
   def NurseTest() {
     var pdp = new PDP(testNurses, new AttributeFinder)
     var res2 = pdp.evaluate("maarten", "view", "doc123",
-        subject.roles -> List("medical_personnel", "nurse"),
-        subject.triggered_breaking_glass -> false,
-        subject.department -> "elder_care",
-        subject.allowed_to_access_pms -> false, // X
-        subject.shift_start -> new LocalDateTime(2014, 6, 24, 9, 0, 0),
-        subject.shift_stop -> new LocalDateTime(2014, 6, 24, 17, 0, 0),
-        subject.location -> "hospital",
-        subject.admitted_patients_in_nurse_unit -> List("patientX", "patientY"),
-        subject.responsible_patients -> List("patientX", "patientZ"),
-        resource.owner_id -> "patientX",
-        resource.owner_withdrawn_consents -> List("subject1"),
+        subject.roles -> List("medical_personnel", "physician"),
+        subject.triggered_breaking_glass -> true,
+        subject.department -> "cardiology",
         resource.type_ -> "patientstatus",
-        resource.created -> new LocalDateTime(2014, 6, 22, 14, 2, 1), // three days ago
-        environment.currentDateTime -> new LocalDateTime(2014, 6, 24, 14, 2, 1))
+        resource.owner_withdrawn_consents -> List("subject1","subject2","subject3"))
         
     val converter = new TreeConverter(testNurses, null)
     pdp = new PDP(converter.reduce(testNurses), new AttributeFinder)
     var res1 = pdp.evaluate("maarten", "view", "doc123",
-        subject.roles -> List("medical_personnel", "nurse"),
-        subject.triggered_breaking_glass -> false,
-        subject.department -> "elder_care",
-        subject.allowed_to_access_pms -> false, // X
-        subject.shift_start -> new LocalDateTime(2014, 6, 24, 9, 0, 0),
-        subject.shift_stop -> new LocalDateTime(2014, 6, 24, 17, 0, 0),
-        subject.location -> "hospital",
-        subject.admitted_patients_in_nurse_unit -> List("patientX", "patientY"),
-        subject.responsible_patients -> List("patientX", "patientZ"),
-        resource.owner_id -> "patientX",
-        resource.owner_withdrawn_consents -> List("subject1"),
+        subject.roles -> List("medical_personnel", "physician"),
+        subject.triggered_breaking_glass -> true,
+        subject.department -> "cardiology",
         resource.type_ -> "patientstatus",
-        resource.created -> new LocalDateTime(2014, 6, 22, 14, 2, 1), // three days ago
-        environment.currentDateTime -> new LocalDateTime(2014, 6, 24, 14, 2, 1))
+        resource.owner_withdrawn_consents -> List("subject1","subject2","subject3"))
         
     println("Nurse test: " + res2.toString())   
     assert(res1 == res2)
@@ -493,38 +457,20 @@ class conversionTest{
   def PatientTest() {
     var pdp = new PDP(testPatients, new AttributeFinder)
     var res2 = pdp.evaluate("maarten", "view", "doc123",
-        subject.roles -> List("medical_personnel", "nurse"),
-        subject.triggered_breaking_glass -> false,
-        subject.department -> "elder_care",
-        subject.allowed_to_access_pms -> false, // X
-        subject.shift_start -> new LocalDateTime(2014, 6, 24, 9, 0, 0),
-        subject.shift_stop -> new LocalDateTime(2014, 6, 24, 17, 0, 0),
-        subject.location -> "hospital",
-        subject.admitted_patients_in_nurse_unit -> List("patientX", "patientY"),
-        subject.responsible_patients -> List("patientX", "patientZ"),
-        resource.owner_id -> "patientX",
-        resource.owner_withdrawn_consents -> List("subject1"),
+        subject.roles -> List("medical_personnel", "physician"),
+        subject.triggered_breaking_glass -> true,
+        subject.department -> "cardiology",
         resource.type_ -> "patientstatus",
-        resource.created -> new LocalDateTime(2014, 6, 22, 14, 2, 1), // three days ago
-        environment.currentDateTime -> new LocalDateTime(2014, 6, 24, 14, 2, 1))
+        resource.owner_withdrawn_consents -> List("subject1","subject2","subject3"))
         
     val converter = new TreeConverter(testPatients, null)
     pdp = new PDP(converter.reduce(testPatients), new AttributeFinder)
     var res1 = pdp.evaluate("maarten", "view", "doc123",
-        subject.roles -> List("medical_personnel", "nurse"),
-        subject.triggered_breaking_glass -> false,
-        subject.department -> "elder_care",
-        subject.allowed_to_access_pms -> false, // X
-        subject.shift_start -> new LocalDateTime(2014, 6, 24, 9, 0, 0),
-        subject.shift_stop -> new LocalDateTime(2014, 6, 24, 17, 0, 0),
-        subject.location -> "hospital",
-        subject.admitted_patients_in_nurse_unit -> List("patientX", "patientY"),
-        subject.responsible_patients -> List("patientX", "patientZ"),
-        resource.owner_id -> "patientX",
-        resource.owner_withdrawn_consents -> List("subject1"),
+        subject.roles -> List("medical_personnel", "physician"),
+        subject.triggered_breaking_glass -> true,
+        subject.department -> "cardiology",
         resource.type_ -> "patientstatus",
-        resource.created -> new LocalDateTime(2014, 6, 22, 14, 2, 1), // three days ago
-        environment.currentDateTime -> new LocalDateTime(2014, 6, 24, 14, 2, 1))
+        resource.owner_withdrawn_consents -> List("subject1","subject2","subject3"))
      
     
     assert(res1 == res2)
@@ -535,42 +481,23 @@ class conversionTest{
   def OtherTest() {
     var pdp = new PDP(testOthers, new AttributeFinder)
     var res2 = pdp.evaluate("maarten", "view", "doc123",
-        subject.roles -> List("medical_personnel", "nurse"),
-        subject.triggered_breaking_glass -> false,
-        subject.department -> "elder_care",
-        subject.allowed_to_access_pms -> false, // X
-        subject.shift_start -> new LocalDateTime(2014, 6, 24, 9, 0, 0),
-        subject.shift_stop -> new LocalDateTime(2014, 6, 24, 17, 0, 0),
-        subject.location -> "hospital",
-        subject.admitted_patients_in_nurse_unit -> List("patientX", "patientY"),
-        subject.responsible_patients -> List("patientX", "patientZ"),
-        resource.owner_id -> "patientX",
-        resource.owner_withdrawn_consents -> List("subject1"),
+        subject.roles -> List("medical_personnel", "physician"),
+        subject.triggered_breaking_glass -> true,
+        subject.department -> "cardiology",
         resource.type_ -> "patientstatus",
-        resource.created -> new LocalDateTime(2014, 6, 22, 14, 2, 1), // three days ago
-        environment.currentDateTime -> new LocalDateTime(2014, 6, 24, 14, 2, 1))
+        resource.owner_withdrawn_consents -> List("subject1","subject2","subject3"))
         
     val converter = new TreeConverter(testOthers, null)
     pdp = new PDP(converter.reduce(testOthers), new AttributeFinder)
     var res1 = pdp.evaluate("maarten", "view", "doc123",
-        subject.roles -> List("medical_personnel", "nurse"),
-        subject.triggered_breaking_glass -> false,
-        subject.department -> "elder_care",
-        subject.allowed_to_access_pms -> false, // X
-        subject.shift_start -> new LocalDateTime(2014, 6, 24, 9, 0, 0),
-        subject.shift_stop -> new LocalDateTime(2014, 6, 24, 17, 0, 0),
-        subject.location -> "hospital",
-        subject.admitted_patients_in_nurse_unit -> List("patientX", "patientY"),
-        subject.responsible_patients -> List("patientX", "patientZ"),
-        resource.owner_id -> "patientX",
-        resource.owner_withdrawn_consents -> List("subject1"),
+        subject.roles -> List("medical_personnel", "physician"),
+        subject.triggered_breaking_glass -> true,
+        subject.department -> "cardiology",
         resource.type_ -> "patientstatus",
-        resource.created -> new LocalDateTime(2014, 6, 22, 14, 2, 1), // three days ago
-        environment.currentDateTime -> new LocalDateTime(2014, 6, 24, 14, 2, 1))
+        resource.owner_withdrawn_consents -> List("subject1","subject2","subject3"))
      
-    
-    assert(res1 == res2)
     println("Other test: " + res2.toString())
+    assert(res1 == res2)
   }
   
 }
