@@ -1,6 +1,8 @@
 package Thesis.Thesisbuild
 
 import stapl.core._
+import aima.core.logic.propositional.parsing.ast.Sentence
+import aima.core.logic.propositional.visitors.ConvertToDNF
 
 class TreeConverter(val root: AbstractPolicy, val knownAttributes : List[Attribute]) {
   
@@ -35,13 +37,19 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : List[Attribu
 	}
 	
 	def normalise(policy : Policy) : AbstractPolicy = {
-	  //TODO: copy policy?
 	  var p = null
-	  for (p <- policy.subpolicies){
-	    //TODO: normalise condition subpolicies
+	  var newsubs = List[AbstractPolicy]()
+	  for (p <- policy.subpolicies.reverse){
+	    var rule = p.asInstanceOf[Rule]
+	    var sentence = convertToSentence(rule.condition)
+	    sentence = ConvertToDNF.convert(sentence)
+	    var condition = revertToCondition(sentence)
+	    val newRule = new Rule(rule.id)(rule.effect,condition,List[ObligationAction]())
+	    newRule.parent = Some(policy)
+	    newsubs = newRule :: newsubs
 	  }
-	  //TODO: return normalised policy
-	  root
+	  policy.subpolicies = newsubs
+	  return policy
 	}
 	
 	def expand() : AbstractPolicy = {
@@ -51,7 +59,7 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : List[Attribu
 	
 	/***************************************************************************
 	****************************************************************************
-	****************************HELPER  FUNCTIONS*******************************
+	***********************HELPER  FUNCTIONS REDUCTION**************************
 	****************************************************************************
 	****************************************************************************/
 	
@@ -258,6 +266,23 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : List[Attribu
 	    c.parent = Some(parent)
 	  }
 	  return resultList
+	}
+	
+	
+	/***************************************************************************
+	****************************************************************************
+	********************HELPER  FUNCTIONS NORMALISATION*************************
+	****************************************************************************
+	****************************************************************************/
+	
+	def convertToSentence(condition: Expression) : Sentence =  {
+	  //TODO: implement
+	  return null
+	}
+	
+	def revertToCondition(sentence: Sentence) : Expression = {
+	  //TODO implement
+	  return null
 	}
 
 }
