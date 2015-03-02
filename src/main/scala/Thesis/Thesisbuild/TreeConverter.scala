@@ -3,6 +3,10 @@ package Thesis.Thesisbuild
 import stapl.core._
 import aima.core.logic.propositional.parsing.ast.Sentence
 import aima.core.logic.propositional.visitors.ConvertToDNF
+import aima.core.logic.propositional.parsing.ast.ComplexSentence
+import aima.core.logic.propositional.parsing.ast.Connective
+import aima.core.logic.propositional.parsing.ast.AtomicSentence
+import aima.core.logic.propositional.parsing.ast.PropositionSymbol
 
 class TreeConverter(val root: AbstractPolicy, val knownAttributes : List[Attribute]) {
   
@@ -276,13 +280,22 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : List[Attribu
 	****************************************************************************/
 	
 	def convertToSentence(condition: Expression) : Sentence =  {
-	  //TODO: implement
-	  return null
+	  condition match {
+	    case And(x,y) => return new ComplexSentence(Connective.get("&"),convertToSentence(x),convertToSentence(y))
+	    case Or(x,y) => return new ComplexSentence(Connective.get("|"),convertToSentence(x),convertToSentence(y))
+	    case Not(x) => return new ComplexSentence(Connective.get("~"),convertToSentence(x))
+	    case x => return new PropositionSymbol(x.toString())
+	  }
 	}
 	
 	def revertToCondition(sentence: Sentence) : Expression = {
-	  //TODO implement
-	  return null
+	  sentence.getConnective() match {
+	    case Connective.AND => return And(revertToCondition(sentence.getSimplerSentence(0)),revertToCondition(sentence.getSimplerSentence(1)))
+	    case Connective.OR => return Or(revertToCondition(sentence.getSimplerSentence(0)),revertToCondition(sentence.getSimplerSentence(1)))
+	    case Connective.NOT => return Not(revertToCondition(sentence.getSimplerSentence(0)))
+	    case null => return null //TODO fix
+	    case _ => return null
+	  }
 	}
 
 }
