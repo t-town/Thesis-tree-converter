@@ -293,9 +293,18 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : List[Attribu
 	    case Connective.AND => return And(revertToCondition(sentence.getSimplerSentence(0)),revertToCondition(sentence.getSimplerSentence(1)))
 	    case Connective.OR => return Or(revertToCondition(sentence.getSimplerSentence(0)),revertToCondition(sentence.getSimplerSentence(1)))
 	    case Connective.NOT => return Not(revertToCondition(sentence.getSimplerSentence(0)))
-	    case null => return null //TODO fix
+	    case null => return stringToCondition(sentence.asInstanceOf[PropositionSymbol].getSymbol())
 	    case _ => return null
 	  }
+	}
+	
+	def stringToCondition(string : String)  : Expression = {
+	  //TODO implement
+	  string match{
+	    case "test" => return null
+	    case _ => return null
+	  }
+	  return null
 	}
 
 }
