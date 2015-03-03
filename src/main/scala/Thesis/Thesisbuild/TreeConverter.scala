@@ -284,7 +284,7 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : List[Attribu
 	    case And(x,y) => return new ComplexSentence(Connective.get("&"),convertToSentence(x),convertToSentence(y))
 	    case Or(x,y) => return new ComplexSentence(Connective.get("|"),convertToSentence(x),convertToSentence(y))
 	    case Not(x) => return new ComplexSentence(Connective.get("~"),convertToSentence(x))
-	    case x => return new PropositionSymbol(x.toString())
+	    case x => {propMap+=(prop+index -> x);index+=1;return new PropositionSymbol(prop+(index-1))}
 	  }
 	}
 	
@@ -293,18 +293,13 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : List[Attribu
 	    case Connective.AND => return And(revertToCondition(sentence.getSimplerSentence(0)),revertToCondition(sentence.getSimplerSentence(1)))
 	    case Connective.OR => return Or(revertToCondition(sentence.getSimplerSentence(0)),revertToCondition(sentence.getSimplerSentence(1)))
 	    case Connective.NOT => return Not(revertToCondition(sentence.getSimplerSentence(0)))
-	    case null => return stringToCondition(sentence.asInstanceOf[PropositionSymbol].getSymbol())
+	    case null => return propMap.get(sentence.asInstanceOf[PropositionSymbol].getSymbol()).getOrElse(null)
 	    case _ => return null
 	  }
 	}
 	
-	def stringToCondition(string : String)  : Expression = {
-	  //TODO implement
-	  string match{
-	    case "test" => return null
-	    case _ => return null
-	  }
-	  return null
-	}
+	val prop = "a"
+	var index = 0
+	var propMap = Map[String,Expression]()
 
 }
