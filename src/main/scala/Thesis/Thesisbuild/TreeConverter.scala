@@ -53,6 +53,8 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : List[Attribu
 	    newsubs = newRule :: newsubs
 	  }
 	  policy.subpolicies = newsubs
+	  index = 0
+	  propMap = Map[String,Expression]()
 	  return policy
 	}
 	

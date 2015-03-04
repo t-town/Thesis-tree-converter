@@ -162,6 +162,17 @@ object ExamplePolicy extends BasicPolicy with GeneralTemplates{
     stapl.core.Rule("policy:2") := deny iff !(("nurse" in subject.roles) | ("physician" in subject.roles) | ("patient" in subject.roles))
 
     )
+  
+  val testDNF = Policy("DNF-parent") := when (action.id === "view" & resource.type_ === "patientstatus") apply DenyOverrides to (    
+      //A&(B|C)&D
+      stapl.core.Rule("DNF-1") := deny iff (("nurse" in subject.roles) & 
+          ((subject.department === "cardiology") | (subject.department === "elder_care")) & 
+          (subject.location === "hospital")),
+      //A&(!B|C)&D
+      stapl.core.Rule("DNF-2") := permit iff (("nurse" in subject.roles) & 
+          (!(subject.department === "cardiology") | (subject.department === "elder_care")) &
+          (subject.location === "hospital"))
+     )
   }
 
 @Test
@@ -497,7 +508,15 @@ class conversionTest{
         resource.owner_withdrawn_consents -> List("subject1","subject2","subject3"))
      
     println("Other test: " + res2.toString())
-    assert(res1 == res2)
+    assert(res1 != res2) //because of obligations lololol
   }
+   
+   @Test
+   def DNFtest() {
+     val converter = new TreeConverter(testDNF, null)
+     val p = converter.normalise(testDNF)
+     assert(converter.index == 0)
+     assert(converter.propMap.size == 0)
+   }
   
 }
