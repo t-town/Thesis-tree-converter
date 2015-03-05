@@ -63,7 +63,9 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : List[Attribu
 	  var knownAtts = knownAttributes
 	  while(canBeSplit(splitPol)){
 	    var tmp = splitPolicy(splitPol,knownAtts)
-	    
+	    tmp = splitRules(tmp,knownAtts)
+	    knownAtts :::= getAttributes(tmp.subpolicies.head.asInstanceOf[Policy])
+	    splitPol = tmp
 	  }
 	  return policy
 	}
@@ -323,6 +325,16 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : List[Attribu
 	def splitPolicy(policy : Policy, atts: List[Attribute]) : Policy = {
 	  //TODO implement
 	  return policy
+	}
+	
+	def splitRules(policy: Policy, atts: List[Attribute]) : Policy = {
+	  //TODO implement
+	  return policy
+	}
+	
+	def getAttributes(policy : Policy) : List[Attribute] = {
+	  //TODO implement
+	  return null
 	}
 
 }
