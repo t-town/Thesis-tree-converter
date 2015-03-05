@@ -58,9 +58,14 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : List[Attribu
 	  return policy
 	}
 	
-	def expand() : AbstractPolicy = {
-	  //TODO: expand normalised tree
-	  root
+	def expand(policy : Policy) : AbstractPolicy = {
+	  var splitPol = policy
+	  var knownAtts = knownAttributes
+	  while(canBeSplit(splitPol)){
+	    var tmp = splitPolicy(splitPol,knownAtts)
+	    
+	  }
+	  return policy
 	}
 	
 	/***************************************************************************
@@ -303,5 +308,21 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : List[Attribu
 	val prop = "a"
 	var index = 0
 	var propMap = Map[String,Expression]()
+	
+	/***************************************************************************
+	****************************************************************************
+	********************HELPER  FUNCTIONS EXPANSION*****************************
+	****************************************************************************
+	****************************************************************************/
+	
+	def canBeSplit(policy : Policy) : Boolean = {
+	  //TODO implement
+	  return true
+	}
+	
+	def splitPolicy(policy : Policy, atts: List[Attribute]) : Policy = {
+	  //TODO implement
+	  return policy
+	}
 
 }
