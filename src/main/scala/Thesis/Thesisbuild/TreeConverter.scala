@@ -376,13 +376,40 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
 	}
 	
 	def splitOr(condition : Expression) : Set[Expression] = {
-	  //TODO implement
-	  return null
+	  condition match{
+	    case Or(x,y) => return splitOr(x) ++ splitOr(y)
+	    case x => return Set(x)
+	  }
 	}
 	
 	def nbKnownAttributes(condition : Expression, atts: Set[Attribute]) : Int = {
-	  //TODO implement
-	  return 0
+	  condition match{
+	    case Or(x,y) => return nbKnownAttributes(x, atts) + nbKnownAttributes(y, atts)
+	    case And(x,y) => return nbKnownAttributes(x, atts) + nbKnownAttributes(y, atts)
+	    case Not(x) => return nbKnownAttributes(x, atts)
+	    case BoolExpression(x) if atts.contains(x) => return 1
+	    case BoolExpression(x) => return 0
+	    case GreaterThanValue(x,y) => return nbAttributes(x,y,atts)
+	    case EqualsValue(x,y) => return nbAttributes(x,y,atts)
+	    case ValueIn(x,y) => return nbAttributes(x,y,atts)
+	    case _ => return 0
+	    }
+	}
+	
+	def nbAttributes(x: Value, y: Value, atts: Set[Attribute]) : Int = {
+	  if(x.isInstanceOf[Attribute] && y.isInstanceOf[Attribute]) {
+	    var att1 = x.asInstanceOf[Attribute]
+	    var att2 = y.asInstanceOf[Attribute]
+	    if(atts.contains(att1) && atts.contains(att2)) return 2
+	    else if(atts.contains(att1) || atts.contains(att2)) return 1
+	    else return 0
+	  }else if(x.isInstanceOf[Attribute]){
+	    if(atts.contains(x.asInstanceOf[Attribute])) return 1
+	    return 0
+	  }else if(y.isInstanceOf[Attribute]){
+	    if(atts.contains(y.asInstanceOf[Attribute])) return 1
+	    return 0
+	  }else return 0
 	}
 	
 	var ruleIndex = 0

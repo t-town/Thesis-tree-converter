@@ -458,7 +458,7 @@ class conversionTest{
         subject.department -> "cardiology",
         resource.type_ -> "patientstatus",
         resource.owner_withdrawn_consents -> List("subject1","subject2","subject3"))
-        
+   
     println("Nurse test: " + res2.toString())   
     assert(res1 == res2)
     
