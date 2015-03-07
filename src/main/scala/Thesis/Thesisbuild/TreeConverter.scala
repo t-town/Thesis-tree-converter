@@ -353,13 +353,36 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
 	}
 	
 	def findCommon(r1 : Rule, r2: Rule, atts: Set[Attribute]) : Expression = {
-	  //TODO implement
-	  return null
+	  var c1 = r1.condition
+	  var c2 = r2.condition
+	  var s1 = splitOr(c1)
+	  var s2 = splitOr(c2)
+	  var common = s1.&(s2)
+	  var result:Expression = null
+	  var max = 0
+	  for(c <- common) {
+	    var n = nbKnownAttributes(c,atts)
+	    if(n > max) {
+	      max = n
+	      result = c
+	    }
+	  }
+	  return result
 	}
 	
 	def removeCommon(condition : Expression, common: Expression) : Expression = {
 	 //TODO implement
 	  return null
+	}
+	
+	def splitOr(condition : Expression) : Set[Expression] = {
+	  //TODO implement
+	  return null
+	}
+	
+	def nbKnownAttributes(condition : Expression, atts: Set[Attribute]) : Int = {
+	  //TODO implement
+	  return 0
 	}
 	
 	var ruleIndex = 0
