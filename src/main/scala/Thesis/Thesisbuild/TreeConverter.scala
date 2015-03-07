@@ -8,7 +8,7 @@ import aima.core.logic.propositional.parsing.ast.Connective
 import aima.core.logic.propositional.parsing.ast.AtomicSentence
 import aima.core.logic.propositional.parsing.ast.PropositionSymbol
 
-class TreeConverter(val root: AbstractPolicy, val knownAttributes : List[Attribute]) {
+class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribute]) {
   
   /****************************************************************************
    ****************************************************************************
@@ -63,8 +63,8 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : List[Attribu
 	  var knownAtts = knownAttributes
 	  while(canBeSplit(splitPol)){
 	    var tmp = splitPolicy(splitPol,knownAtts)
-	    tmp = splitRules(tmp,knownAtts)
-	    knownAtts :::= getAttributes(tmp.subpolicies.head.asInstanceOf[Policy])
+	    tmp = splitRules(splitPol,knownAtts)
+	    knownAtts ++= getAttributes(tmp.subpolicies.head.asInstanceOf[Policy])
 	    splitPol = tmp
 	  }
 	  return policy
@@ -322,19 +322,47 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : List[Attribu
 	  return true
 	}
 	
-	def splitPolicy(policy : Policy, atts: List[Attribute]) : Policy = {
+	def splitPolicy(policy : Policy, atts: Set[Attribute]) : Policy = {
+	  var e1 = policy.subpolicies(0).asInstanceOf[Rule].effect
+	  var e2 = policy.subpolicies(1).asInstanceOf[Rule].effect
+	  var commoncond = findCommon(policy.subpolicies(0).asInstanceOf[Rule],policy.subpolicies(1).asInstanceOf[Rule],atts)
+	  var cond1 = policy.subpolicies(0).asInstanceOf[Rule].condition
+	  var cond2 = policy.subpolicies(1).asInstanceOf[Rule].condition
+	  var newRule = new Rule("newRule"+ruleIndex)(e1,commoncond,List.empty)
+	  newRule.parent = Some(policy)
+	  ruleIndex+=1
+	  var newSubrule1 = new Rule("newRule"+ruleIndex)(e1,removeCommon(cond1,commoncond),List.empty)
+	  var newSubrule2 = new Rule("newRule"+(ruleIndex+1))(e2,removeCommon(cond2,commoncond),List.empty)
+	  ruleIndex += 2
+	  var newsubs = List(newSubrule1,newSubrule2)
+	  var newPol = new Policy("newPol"+policyIndex)(AlwaysTrue,FirstApplicable,newsubs,List.empty)
+	  newPol.parent = Some(policy)
+	  var newpsubs = List(newRule,newPol)
+	  policy.subpolicies = newpsubs
+	  return newPol
+	}
+	
+	def splitRules(policy: Policy, atts: Set[Attribute]) : Policy = {
 	  //TODO implement
 	  return policy
 	}
 	
-	def splitRules(policy: Policy, atts: List[Attribute]) : Policy = {
-	  //TODO implement
-	  return policy
-	}
-	
-	def getAttributes(policy : Policy) : List[Attribute] = {
+	def getAttributes(policy : Policy) : Set[Attribute] = {
 	  //TODO implement
 	  return null
 	}
+	
+	def findCommon(r1 : Rule, r2: Rule, atts: Set[Attribute]) : Expression = {
+	  //TODO implement
+	  return null
+	}
+	
+	def removeCommon(condition : Expression, common: Expression) : Expression = {
+	 //TODO implement
+	  return null
+	}
+	
+	var ruleIndex = 0
+	var policyIndex = 0
 
 }
