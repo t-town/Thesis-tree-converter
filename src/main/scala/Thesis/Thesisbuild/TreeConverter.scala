@@ -157,7 +157,7 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
 	  return getLowestPolicies(newPol).head
 	}
 	
-	def replace(policies : List[AbstractPolicy], policy:Policy, newPolicy : Policy) : List[AbstractPolicy] = {
+	def replace(policies : List[AbstractPolicy], policy:AbstractPolicy, newPolicy : AbstractPolicy) : List[AbstractPolicy] = {
 	  var resList = List[AbstractPolicy]()
 	  for(x <- policies.reverse){
 	    if(x == policy) resList ::= newPolicy else resList ::= x
@@ -341,8 +341,32 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
 	}
 	
 	def splitRules(policy: Policy, atts: Set[Attribute]) : Policy = {
-	  //TODO implement
+	  var splittable = policy.subpolicies
+	  while(splittable.size > 0){
+	    var newRule = split(splittable.head.asInstanceOf[Rule])
+	    splittable = (splittable.tail ::: newRule).filter(c => c != null)
+	  }
 	  return policy
+	}
+	
+	def split(rule: Rule) : List[AbstractPolicy] = {
+	  var cond1:Expression = null
+	  var cond2:Expression = null
+	  rule.condition match {
+	    case Or(x,y) => {cond1 = x ;cond2 = y}
+	    case _ => return null
+	  }
+	  var newRule1 = new Rule("newRule"+ruleIndex)(rule.effect,cond1,List.empty)
+	  var newRule2= new Rule("newRule"+(ruleIndex+1))(rule.effect,cond2,List.empty)
+	  ruleIndex += 2
+	  var newPol = new Policy("newPol" + policyIndex)(AlwaysTrue,FirstApplicable,List(newRule1,newRule2),List.empty)
+	  policyIndex +=1
+	  newPol.parent = rule.parent
+	  newPol.parent match {
+	    case Some(x) => x.subpolicies = replace(x.subpolicies,rule,newPol)
+	    case None => 
+	  }
+	  return newPol.subpolicies
 	}
 	
 	def getAttributes(policy : Policy) : Set[Attribute] = {
