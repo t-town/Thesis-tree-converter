@@ -63,8 +63,8 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
 	  var knownAtts = knownAttributes
 	  while(canBeSplit(splitPol)){
 	    var tmp = splitPolicy(splitPol,knownAtts)
-	    tmp = splitRules(splitPol,knownAtts)
-	    knownAtts ++= getAttributes(tmp.subpolicies.head.asInstanceOf[Policy])
+	    splitRules(splitPol,knownAtts)
+	    knownAtts ++= getAttributes(splitPol.subpolicies.head.asInstanceOf[Policy])
 	    splitPol = tmp
 	  }
 	  return policy
@@ -369,9 +369,39 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
 	  return newPol.subpolicies
 	}
 	
+	def getAttributes(aPol: AbstractPolicy) : Set[Attribute] = aPol match{
+	  case x:Policy => return getAttributes(x)
+	  case x:Rule => return getAttributes(x)
+	  case _ => return null
+	}
+	
 	def getAttributes(policy : Policy) : Set[Attribute] = {
-	  //TODO implement
-	  return null
+	  var result = Set[Attribute]()
+	  result ++= getAttributes(policy.target)
+	  for(s <- policy.subpolicies){
+	    result ++= getAttributes(s)
+	  }
+	  return result
+	}
+	
+	def getAttributes(rule : Rule):Set[Attribute] = return getAttributes(rule.condition)
+	
+	def getAttributes(expression:Expression) : Set[Attribute] = expression match{
+	  case Or(x,y) => return getAttributes(x) ++ getAttributes(y)
+	  case And(x,y) => return  getAttributes(x) ++ getAttributes(y)
+	  case Not(x) => return getAttributes(x)
+	  case BoolExpression(x) => return Set(x)
+	  case GreaterThanValue(x,y) => return getAttributes(x,y)
+	  case EqualsValue(x,y) => return getAttributes(x,y)
+	  case ValueIn(x,y) => return getAttributes(x,y)
+      case _ => return null
+	}
+	
+	def getAttributes(x: Value, y: Value) : Set[Attribute] = {
+	  var result = Set[Attribute]()
+	  if(x.isInstanceOf[Attribute]) result += x.asInstanceOf[Attribute]
+	  if(y.isInstanceOf[Attribute]) result += y.asInstanceOf[Attribute]
+	  return result
 	}
 	
 	def findCommon(r1 : Rule, r2: Rule, atts: Set[Attribute]) : Expression = {
@@ -397,8 +427,7 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
 	}
 	
 	def removeCommon(condition : Expression, common: Expression) : Expression = {
-	 //TODO implement
-	  
+	 //TODO implement	
 	  return null
 	}
 	
