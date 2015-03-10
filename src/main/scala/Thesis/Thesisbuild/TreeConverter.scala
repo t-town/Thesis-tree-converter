@@ -402,7 +402,7 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
 	  if(x.isInstanceOf[Attribute]) result += x.asInstanceOf[Attribute]
 	  if(y.isInstanceOf[Attribute]) result += y.asInstanceOf[Attribute]
 	  return result
-	}
+	}	
 	
 	def findCommon(r1 : Rule, r2: Rule, atts: Set[Attribute]) : Expression = {
 	  var common = findCommons(r1,r2)
@@ -426,9 +426,10 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
 	  return s1.&(s2)
 	}
 	
-	def removeCommon(condition : Expression, common: Expression) : Expression = {
-	 //TODO implement	
-	  return null
+	def removeCommon(condition : Expression, common: Expression) : Expression = condition match{
+	  case Or(x,y) => return Or(removeCommon(x,common),removeCommon(y,common))
+	  case x if x == common => return AlwaysFalse
+	  case x => return x
 	}
 	
 	def splitOr(condition : Expression) : Set[Expression] = {
