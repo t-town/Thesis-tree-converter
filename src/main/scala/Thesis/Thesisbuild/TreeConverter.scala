@@ -293,6 +293,9 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
 	    case And(x,y) => return new ComplexSentence(Connective.get("&"),convertToSentence(x),convertToSentence(y))
 	    case Or(x,y) => return new ComplexSentence(Connective.get("|"),convertToSentence(x),convertToSentence(y))
 	    case Not(x) => return new ComplexSentence(Connective.get("~"),convertToSentence(x))
+	    case AlwaysTrue => return new PropositionSymbol("true")
+	    case AlwaysFalse => return new PropositionSymbol("false")
+	    case x if propMap.valuesIterator.contains(x) => return new PropositionSymbol(propMap.filter(p => x==p._2).head._1)
 	    case x => {propMap+=(prop+index -> x);index+=1;return new PropositionSymbol(prop+(index-1))}
 	  }
 	}

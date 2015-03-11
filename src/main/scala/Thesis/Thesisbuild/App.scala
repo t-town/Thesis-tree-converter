@@ -20,7 +20,7 @@ object App {
   //val pdp = new PDP(ehealth)
   val converter = new TreeConverter(naturalPolicy, null)
   //test shit here
-  var policyreduce = converter.reduce(naturalPolicy)
+  var policyreduce = converter.normalise(converter.reduce(naturalPolicy))
   val pdp = new PDP(policyreduce)
   println(pdp.evaluate("maarten", "view", "doc123",
         subject.roles -> List("medical_personnel", "nurse"),
