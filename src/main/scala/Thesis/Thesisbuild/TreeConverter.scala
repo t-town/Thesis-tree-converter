@@ -421,6 +421,7 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
 	  return result
 	}
 	
+	//TODO: fix so it works with permutated conditions
 	def findCommons(r1 : Rule, r2: Rule) : Set[Expression]= {
 	  var c1 = r1.condition
 	  var c2 = r2.condition

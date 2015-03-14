@@ -40,11 +40,20 @@ object ExamplePol extends BasicPolicy with GeneralTemplates{
   subject.responsible_patients = ListAttribute(String)
   
   val testPol1 = Policy("ehealth") := when (action.id === "view" & resource.type_ === "patientstatus") apply DenyOverrides to ( 
-      stapl.core.Rule("DNF-1") := deny iff (("nurse" in subject.roles) | 
-          (subject.location === "hospital") & (subject.department === "elder_care")) |
+      stapl.core.Rule("DNF-1") := deny iff ("nurse" in subject.roles) | 
+          ((subject.location === "hospital") & (subject.department === "elder_care")) |
           ((subject.department === "cardiology")),
-      stapl.core.Rule("DNF-2") := permit iff (("nurse" in subject.roles) | 
-          (subject.location === "hospital") & (subject.department === "elder_care")) |
+      stapl.core.Rule("DNF-2") := permit iff ("nurse" in subject.roles) | 
+          ((subject.location === "hospital") & (subject.department === "elder_care")) |
+          (!(subject.department === "cardiology"))
+      )
+  
+  val testPol2 = Policy("ehealth") := when (action.id === "view" & resource.type_ === "patientstatus") apply DenyOverrides to ( 
+      stapl.core.Rule("DNF-1") := deny iff ("nurse" in subject.roles) | 
+          ((subject.location === "hospital") & (subject.department === "elder_care")) |
+          ((subject.department === "cardiology")),
+      stapl.core.Rule("DNF-2") := permit iff ("nurse" in subject.roles) | 
+          ((subject.department === "elder_care") & (subject.location === "hospital")) |
           (!(subject.department === "cardiology"))
       )
   
@@ -87,15 +96,22 @@ class ExpansionTest {
   @Test
   def findCommonTest() = {
     assert(converter.findCommon(testPol1.subpolicies(0).asInstanceOf[stapl.core.Rule],
-        testPol1.subpolicies(0).asInstanceOf[stapl.core.Rule], atts).isInstanceOf[ValueIn])
+        testPol1.subpolicies(1).asInstanceOf[stapl.core.Rule], atts).isInstanceOf[ValueIn])
     val newAtts = Set(subject.location)
     assert(converter.findCommon(testPol1.subpolicies(0).asInstanceOf[stapl.core.Rule],
-        testPol1.subpolicies(0).asInstanceOf[stapl.core.Rule], newAtts).isInstanceOf[And])
+        testPol1.subpolicies(1).asInstanceOf[stapl.core.Rule], newAtts).isInstanceOf[And])
   }
   
   @Test
   def findCommonsTest() = {
-    //TODO test if expression can be reversed
+     assert(converter.findCommon(testPol2.subpolicies(0).asInstanceOf[stapl.core.Rule],
+        testPol2.subpolicies(1).asInstanceOf[stapl.core.Rule], atts).isInstanceOf[ValueIn])
+    val newAtts = Set(subject.location)
+    println(converter.findCommon(testPol2.subpolicies(0).asInstanceOf[stapl.core.Rule],
+        testPol2.subpolicies(1).asInstanceOf[stapl.core.Rule], newAtts))
+    assert(converter.findCommon(testPol2.subpolicies(0).asInstanceOf[stapl.core.Rule],
+        testPol2.subpolicies(1).asInstanceOf[stapl.core.Rule], newAtts).isInstanceOf[And])
+        //TODO fix failure in code
   }
   
   @Test
@@ -111,7 +127,8 @@ class ExpansionTest {
   
   @Test
   def nbKnownAttributesTest() = {
-    
+    assert(converter.nbKnownAttributes(testPol2.subpolicies(0).asInstanceOf[stapl.core.Rule].condition, atts)
+        ==1)
   }
   
 }
