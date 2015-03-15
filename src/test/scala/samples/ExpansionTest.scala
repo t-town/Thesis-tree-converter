@@ -70,7 +70,34 @@ class ExpansionTest {
 
   @Test
   def expansionTest() = {
+    var asin = testPol1.asInstanceOf[Policy]
+    var copyrules:List[AbstractPolicy] = List.empty
+    for(r <- asin.subpolicies){
+      var asinr = r.asInstanceOf[stapl.core.Rule]
+      copyrules ::= new stapl.core.Rule(asinr.id)(asinr.effect,asinr.condition,List.empty)
+    }
+    var copy = new Policy(asin.id)(asin.target,asin.pca,copyrules,List.empty)
+    var newPol = converter.expand(copy)
     
+    var ev1 = pdp.evaluate("maarten", "view", "doc123",
+        subject.roles -> List("medical_personnel", "physician"),
+        subject.location -> "hospital",
+        subject.triggered_breaking_glass -> true,
+        subject.department -> "cardiology",
+        resource.type_ -> "patientstatus",
+        resource.owner_withdrawn_consents -> List("subject1","subject2","subject3"))
+        
+    val npdp = new PDP(newPol, new AttributeFinder)
+    
+    var ev2 = npdp.evaluate("maarten", "view", "doc123",
+        subject.roles -> List("medical_personnel", "physician"),
+        subject.location -> "hospital",
+        subject.triggered_breaking_glass -> true,
+        subject.department -> "cardiology",
+        resource.type_ -> "patientstatus",
+        resource.owner_withdrawn_consents -> List("subject1","subject2","subject3"))
+        
+    assert(ev1 == ev2)
   }
   
   @Test
@@ -85,7 +112,7 @@ class ExpansionTest {
   
   @Test
   def splitRulesTest() = {
-    
+    //TODO dringend testen, geeft problemen
   }
   
   @Test
@@ -116,7 +143,38 @@ class ExpansionTest {
   
   @Test
   def removeCommonTest() = {
-    //TODO common removen en testen of pdp steeds zelfde evalueert
+    var common = converter.findCommon(testPol1.subpolicies(0).asInstanceOf[stapl.core.Rule],
+        testPol1.subpolicies(1).asInstanceOf[stapl.core.Rule], atts)
+    var newSubs:List[stapl.core.Rule] = List.empty
+    for(s <- testPol1.subpolicies){ 
+      var ns = s.asInstanceOf[stapl.core.Rule]
+      var remove = converter.removeCommon(ns.condition, common)
+      var newrule = new stapl.core.Rule(s.id)(ns.effect,remove,List.empty)
+      newSubs ::= newrule
+      }
+    
+   var newPol = new Policy(testPol1.asInstanceOf[Policy].id)(testPol1.asInstanceOf[Policy].target,
+        testPol1.asInstanceOf[Policy].pca,newSubs,List.empty)
+    
+    var ev1 = pdp.evaluate("maarten", "view", "doc123",
+        subject.roles -> List("medical_personnel", "physician"),
+        subject.location -> "hospital",
+        subject.triggered_breaking_glass -> true,
+        subject.department -> "cardiology",
+        resource.type_ -> "patientstatus",
+        resource.owner_withdrawn_consents -> List("subject1","subject2","subject3"))
+        
+    val npdp = new PDP(newPol, new AttributeFinder)
+    
+    var ev2 = npdp.evaluate("maarten", "view", "doc123",
+        subject.roles -> List("medical_personnel", "physician"),
+        subject.location -> "hospital",
+        subject.triggered_breaking_glass -> true,
+        subject.department -> "cardiology",
+        resource.type_ -> "patientstatus",
+        resource.owner_withdrawn_consents -> List("subject1","subject2","subject3"))
+        
+    assert(ev1 == ev2)
   }
   
   @Test

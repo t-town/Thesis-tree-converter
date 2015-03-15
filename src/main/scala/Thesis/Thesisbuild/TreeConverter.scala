@@ -345,6 +345,7 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
 	
 	def splitRules(policy: Policy, atts: Set[Attribute]) : Policy = {
 	  var splittable = policy.subpolicies
+	  //TODO fix: slaat echt op niets :p
 	  while(splittable.size > 0){
 	    var newRule = split(splittable.head.asInstanceOf[Rule])
 	    splittable = (splittable.tail ::: newRule).filter(c => c != null)
