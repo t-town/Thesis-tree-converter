@@ -408,9 +408,9 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
 	}	
 	
 	def findCommon(r1 : Rule, r2: Rule, atts: Set[Attribute]) : Expression = {
-	  var common = findCommons(r1,r2)
-	  var result:Expression = null
-	  var max = 0
+	  var common:Set[Expression] = findCommons(r1,r2)
+	  var result:Expression = common.head
+	  var max = nbKnownAttributes(result, atts)
 	  for(c <- common) {
 	    var n = nbKnownAttributes(c,atts)
 	    if(n > max) {
@@ -427,8 +427,18 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
 	  var c2 = r2.condition
 	  var s1 = splitOr(c1)
 	  var s2 = splitOr(c2)
-	  return s1.&(s2)
+	  var result = Set[Expression]()
+	  for (e1 <- s1){
+	    for(e2 <- s2) {
+	      if(isEquivalent(e1,e2))
+	        result += e1
+	    }
+	  }
+	  return result
 	}
+	
+	def isEquivalent(e1 : Expression, e2 : Expression):Boolean = return e1 == e2
+			//TODO fix voor permutations of formulas (rekening houden equivalantie)
 	
 	def removeCommon(condition : Expression, common: Expression) : Expression = condition match{
 	  case Or(x,y) => return Or(removeCommon(x,common),removeCommon(y,common))
