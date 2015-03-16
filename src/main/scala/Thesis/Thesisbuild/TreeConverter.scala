@@ -64,7 +64,7 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
 	  while(canBeSplit(splitPol)){
 	    var tmp = splitPolicy(splitPol,knownAtts)
 	    splitRules(splitPol,knownAtts)
-	    knownAtts ++= getAttributes(splitPol.subpolicies.head.asInstanceOf[Policy])
+	    knownAtts ++= getAttributes(splitPol.subpolicies.head)
 	    splitPol = tmp
 	  }
 	  return policy
@@ -320,12 +320,17 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
 	****************************************************************************
 	****************************************************************************/
 	
-	def canBeSplit(policy : Policy) = 
-	  findCommons(policy.subpolicies(0).asInstanceOf[Rule],policy.subpolicies(1).asInstanceOf[Rule]).size > 0
+	def canBeSplit(policy : Policy):Boolean = {
+	  var common = findCommons(policy.subpolicies(0).asInstanceOf[Rule],policy.subpolicies(1).asInstanceOf[Rule])
+	  println("canbesplit" + common.size)
+	  return common.size > 0
+	  }
+	  
 	
 	def splitPolicy(policy : Policy, atts: Set[Attribute]) : Policy = {
 	  var e1 = policy.subpolicies(0).asInstanceOf[Rule].effect
 	  var e2 = policy.subpolicies(1).asInstanceOf[Rule].effect
+	  println("findCommon")
 	  var commoncond = findCommon(policy.subpolicies(0).asInstanceOf[Rule],policy.subpolicies(1).asInstanceOf[Rule],atts)
 	  var cond1 = policy.subpolicies(0).asInstanceOf[Rule].condition
 	  var cond2 = policy.subpolicies(1).asInstanceOf[Rule].condition
@@ -337,6 +342,7 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
 	  ruleIndex += 2
 	  var newsubs = List(newSubrule1,newSubrule2)
 	  var newPol = new Policy("newPol"+policyIndex)(AlwaysTrue,FirstApplicable,newsubs,List.empty)
+	  policyIndex += 1
 	  newPol.parent = Some(policy)
 	  var newpsubs = List(newRule,newPol)
 	  policy.subpolicies = newpsubs
@@ -344,8 +350,7 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
 	}
 	
 	def splitRules(policy: Policy, atts: Set[Attribute]) : Policy = {
-	  var splittable = policy.subpolicies
-	  //TODO fix: slaat echt op niets :p
+	  var splittable = policy.subpolicies.filter(p => p.isInstanceOf[Rule])
 	  while(splittable.size > 0){
 	    var newRule = split(splittable.head.asInstanceOf[Rule])
 	    splittable = (splittable.tail ::: newRule).filter(c => c != null)
@@ -358,7 +363,7 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
 	  var cond2:Expression = null
 	  rule.condition match {
 	    case Or(x,y) => {cond1 = x ;cond2 = y}
-	    case _ => return null
+	    case _ => return List.empty
 	  }
 	  var newRule1 = new Rule("newRule"+ruleIndex)(rule.effect,cond1,List.empty)
 	  var newRule2= new Rule("newRule"+(ruleIndex+1))(rule.effect,cond2,List.empty)
@@ -419,10 +424,10 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
 	      result = c
 	    }
 	  }
+	  println("common:" + result)
 	  return result
 	}
 	
-	//TODO: fix so it works with permutated conditions
 	def findCommons(r1 : Rule, r2: Rule) : Set[Expression]= {
 	  var c1 = r1.condition
 	  var c2 = r2.condition
@@ -464,6 +469,8 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
 	    case GreaterThanValue(x,y) => return nbAttributes(x,y,atts)
 	    case EqualsValue(x,y) => return nbAttributes(x,y,atts)
 	    case ValueIn(x,y) => return nbAttributes(x,y,atts)
+	    case AlwaysTrue => return -1
+	    case AlwaysFalse => return -1
 	    case _ => return 0
 	    }
 	}
