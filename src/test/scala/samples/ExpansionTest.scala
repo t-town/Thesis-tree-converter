@@ -102,22 +102,7 @@ class ExpansionTest {
   
   @Test
   def canBeSplitTest() = {
-    assert(converter.canBeSplit(testPol1) == true)
-  }
-  
-  @Test
-  def splitPolicyTest() = {
-    
-  }
-  
-  @Test
-  def splitRulesTest() = {
-    //TODO dringend testen, geeft problemen
-  }
-  
-  @Test
-  def splitTest() = {
-    
+    assert(converter.canBeSplit(testPol1,atts) == true)
   }
   
   @Test
