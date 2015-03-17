@@ -7,6 +7,8 @@ import aima.core.logic.propositional.parsing.ast.ComplexSentence
 import aima.core.logic.propositional.parsing.ast.Connective
 import aima.core.logic.propositional.parsing.ast.AtomicSentence
 import aima.core.logic.propositional.parsing.ast.PropositionSymbol
+import aima.core.logic.propositional.visitors.ConvertToCNF
+import aima.core.logic.propositional.inference.DPLLSatisfiable
 
 class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribute]) {
   
@@ -442,11 +444,19 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
 	        result += e1
 	    }
 	  }
+	  println(result)
 	  return result
 	}
 	
-	def isEquivalent(e1 : Expression, e2 : Expression):Boolean = return e1 == e2
-			//TODO fix voor permutations of formulas (rekening houden equivalantie)
+	def isEquivalent(e1 : Expression, e2 : Expression):Boolean = {
+	  var s = new ComplexSentence(Connective.get("<=>"),convertToSentence(e1),convertToSentence(e2))
+	  println("sentence : " + s)
+	  var t = new DPLLSatisfiable()
+	  println("is true? " + t.dpllSatisfiable(s))
+	  // niet de manier om te werken
+	  return e1 == e2
+	  //TODO fix: library does not handle shit the way I intend it to
+	}
 	
 	def removeCommon(condition : Expression, common: Expression) : Expression = condition match{
 	  case Or(x,y) => return Or(removeCommon(x,common),removeCommon(y,common))
