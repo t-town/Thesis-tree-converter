@@ -119,6 +119,7 @@ class ExpansionTest {
      assert(converter.findCommon(testPol2.subpolicies(0).asInstanceOf[stapl.core.Rule],
         testPol2.subpolicies(1).asInstanceOf[stapl.core.Rule], atts).isInstanceOf[ValueIn])
     val newAtts = Set(subject.location)
+    println("Testpol2")
     println(converter.findCommon(testPol2.subpolicies(0).asInstanceOf[stapl.core.Rule],
         testPol2.subpolicies(1).asInstanceOf[stapl.core.Rule], newAtts))
     assert(converter.findCommon(testPol2.subpolicies(0).asInstanceOf[stapl.core.Rule],

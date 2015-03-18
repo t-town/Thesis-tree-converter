@@ -9,6 +9,8 @@ import aima.core.logic.propositional.parsing.ast.AtomicSentence
 import aima.core.logic.propositional.parsing.ast.PropositionSymbol
 import aima.core.logic.propositional.visitors.ConvertToCNF
 import aima.core.logic.propositional.inference.DPLLSatisfiable
+import aima.core.logic.propositional.inference.TTEntails
+import aima.core.logic.propositional.kb.KnowledgeBase
 
 class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribute]) {
   
@@ -65,12 +67,14 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
 	  var knownAtts = knownAttributes
 	  while(canBeSplit(splitPol,knownAtts)){
 	    var tmp = splitPolicy(splitPol,knownAtts)
-	    splitRules(splitPol,knownAtts)
+	    //splitRules(splitPol,knownAtts) not necessary anymore
+	    //TODO remove function
 	    knownAtts ++= getAttributes(splitPol.subpolicies.head)
 	    splitPol = tmp
 	  }
 	  ruleIndex = 0
 	  policyIndex = 0
+	  //TODO Expand and here
 	  return policy
 	}
 	
@@ -444,18 +448,16 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
 	        result += e1
 	    }
 	  }
-	  println(result)
 	  return result
 	}
 	
 	def isEquivalent(e1 : Expression, e2 : Expression):Boolean = {
-	  var s = new ComplexSentence(Connective.get("<=>"),convertToSentence(e1),convertToSentence(e2))
-	  println("sentence : " + s)
-	  var t = new DPLLSatisfiable()
-	  println("is true? " + t.dpllSatisfiable(s))
-	  // niet de manier om te werken
-	  return e1 == e2
-	  //TODO fix: library does not handle shit the way I intend it to
+	  var s1 = convertToSentence(e1)
+	  var s2 = convertToSentence(e2)
+	  var test = new TTEntails
+	  var kb = new KnowledgeBase
+	  kb.tell(s1)
+	  return test.ttEntails(kb, s2) & s1.getNumberSimplerSentences() == s2.getNumberSimplerSentences()
 	}
 	
 	def removeCommon(condition : Expression, common: Expression) : Expression = condition match{
