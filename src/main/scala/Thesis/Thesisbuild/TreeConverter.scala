@@ -67,8 +67,6 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
 	  var knownAtts = knownAttributes
 	  while(canBeSplit(splitPol,knownAtts)){
 	    var tmp = splitPolicy(splitPol,knownAtts)
-	    //splitRules(splitPol,knownAtts) not necessary anymore
-	    //TODO remove function
 	    knownAtts ++= getAttributes(splitPol.subpolicies.head)
 	    splitPol = tmp
 	  }
@@ -353,35 +351,6 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
 	  var newpsubs = List(newRule,newPol)
 	  policy.subpolicies = newpsubs
 	  return newPol
-	}
-	
-	def splitRules(policy: Policy, atts: Set[Attribute]) : Policy = {
-	  var splittable = policy.subpolicies.filter(p => p.isInstanceOf[Rule])
-	  while(splittable.size > 0){
-	    var newRule = split(splittable.head.asInstanceOf[Rule])
-	    splittable = (splittable.tail ::: newRule).filter(c => c != null)
-	  }
-	  return policy
-	}
-	
-	def split(rule: Rule) : List[AbstractPolicy] = {
-	  var cond1:Expression = null
-	  var cond2:Expression = null
-	  rule.condition match {
-	    case Or(x,y) => {cond1 = x ;cond2 = y}
-	    case _ => return List.empty
-	  }
-	  var newRule1 = new Rule("newRule"+ruleIndex)(rule.effect,cond1,List.empty)
-	  var newRule2= new Rule("newRule"+(ruleIndex+1))(rule.effect,cond2,List.empty)
-	  ruleIndex += 2
-	  var newPol = new Policy("newPol" + policyIndex)(AlwaysTrue,FirstApplicable,List(newRule1,newRule2),List.empty)
-	  policyIndex +=1
-	  newPol.parent = rule.parent
-	  newPol.parent match {
-	    case Some(x) => x.subpolicies = replace(x.subpolicies,rule,newPol)
-	    case None => 
-	  }
-	  return newPol.subpolicies
 	}
 	
 	def getAttributes(aPol: AbstractPolicy) : Set[Attribute] = aPol match{
