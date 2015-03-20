@@ -507,10 +507,10 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
 	  var newPol = new Policy(policy.id)(policy.target,policy.pca,newsubs,policy.obligations)
 	  newPol.parent = Some(policy)
 	  newPol.parent match {
-	    	case Some(x) => x.subpolicies = replace(x.subpolicies,policy,newPol)
+	    	case Some(x) => {x.subpolicies = replace(x.subpolicies,policy,newPol);expandAnd(x,atts)}
 	    	case None => 
 	    }
-	    expandAnd(newPol.parent.getOrElse(null),atts)
+	    
 	  }
 	}
 	
