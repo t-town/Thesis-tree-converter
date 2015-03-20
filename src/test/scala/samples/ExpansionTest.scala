@@ -109,29 +109,26 @@ class ExpansionTest {
   
   @Test
   def findCommonTest() = {
-    assert(converter.findCommon(testPol1.subpolicies(0).asInstanceOf[stapl.core.Rule],
-        testPol1.subpolicies(1).asInstanceOf[stapl.core.Rule], atts, "Or").isInstanceOf[ValueIn])
+    assert(converter.findCommon(testPol1.subpolicies(0).asInstanceOf[stapl.core.Rule].condition,
+        testPol1.subpolicies(1).asInstanceOf[stapl.core.Rule].condition, atts, "Or").isInstanceOf[ValueIn])
     val newAtts = Set(subject.location)
-    assert(converter.findCommon(testPol1.subpolicies(0).asInstanceOf[stapl.core.Rule],
-        testPol1.subpolicies(1).asInstanceOf[stapl.core.Rule], newAtts, "Or").isInstanceOf[And])
+    assert(converter.findCommon(testPol1.subpolicies(0).asInstanceOf[stapl.core.Rule].condition,
+        testPol1.subpolicies(1).asInstanceOf[stapl.core.Rule].condition, newAtts, "Or").isInstanceOf[And])
   }
   
   @Test
   def findCommonsTest() = {
-     assert(converter.findCommon(testPol2.subpolicies(0).asInstanceOf[stapl.core.Rule],
-        testPol2.subpolicies(1).asInstanceOf[stapl.core.Rule], atts, "Or").isInstanceOf[ValueIn])
+     assert(converter.findCommon(testPol2.subpolicies(0).asInstanceOf[stapl.core.Rule].condition,
+        testPol2.subpolicies(1).asInstanceOf[stapl.core.Rule].condition, atts, "Or").isInstanceOf[ValueIn])
     val newAtts = Set(subject.location)
-    println("Testpol2")
-    println(converter.findCommon(testPol2.subpolicies(0).asInstanceOf[stapl.core.Rule],
-        testPol2.subpolicies(1).asInstanceOf[stapl.core.Rule], newAtts, "Or"))
-    assert(converter.findCommon(testPol2.subpolicies(0).asInstanceOf[stapl.core.Rule],
-        testPol2.subpolicies(1).asInstanceOf[stapl.core.Rule], newAtts, "Or").isInstanceOf[And])
+    assert(converter.findCommon(testPol2.subpolicies(0).asInstanceOf[stapl.core.Rule].condition,
+        testPol2.subpolicies(1).asInstanceOf[stapl.core.Rule].condition, newAtts, "Or").isInstanceOf[And])
   }
   
   @Test
   def removeCommonTest() = {
-    var common = converter.findCommon(testPol1.subpolicies(0).asInstanceOf[stapl.core.Rule],
-        testPol1.subpolicies(1).asInstanceOf[stapl.core.Rule], atts, "Or")
+    var common = converter.findCommon(testPol1.subpolicies(0).asInstanceOf[stapl.core.Rule].condition,
+        testPol1.subpolicies(1).asInstanceOf[stapl.core.Rule].condition, atts, "Or")
     var newSubs:List[stapl.core.Rule] = List.empty
     for(s <- testPol1.subpolicies){ 
       var ns = s.asInstanceOf[stapl.core.Rule]

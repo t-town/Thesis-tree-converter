@@ -327,7 +327,8 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
 	****************************************************************************/
 	
 	def canBeSplit(policy : Policy,atts : Set[Attribute]):Boolean = {
-	  var common = findCommon(policy.subpolicies(0).asInstanceOf[Rule],policy.subpolicies(1).asInstanceOf[Rule],atts,"Or")
+	  var common = findCommon(policy.subpolicies(0).asInstanceOf[Rule].condition,
+	      policy.subpolicies(1).asInstanceOf[Rule].condition,atts,"Or")
 	  return common != null
 	  }
 	  
@@ -335,7 +336,8 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
 	def splitPolicy(policy : Policy, atts: Set[Attribute]) : Policy = {
 	  var e1 = policy.subpolicies(0).asInstanceOf[Rule].effect
 	  var e2 = policy.subpolicies(1).asInstanceOf[Rule].effect
-	  var commoncond = findCommon(policy.subpolicies(0).asInstanceOf[Rule],policy.subpolicies(1).asInstanceOf[Rule],atts,"Or")
+	  var commoncond = findCommon(policy.subpolicies(0).asInstanceOf[Rule].condition,
+	      policy.subpolicies(1).asInstanceOf[Rule].condition,atts,"Or")
 	  var cond1 = policy.subpolicies(0).asInstanceOf[Rule].condition
 	  var cond2 = policy.subpolicies(1).asInstanceOf[Rule].condition
 	  var newRule = new Rule("newRule"+ruleIndex)(e1,commoncond,List.empty)
@@ -388,8 +390,8 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
 	  return result
 	}	
 	
-	def findCommon(r1 : Rule, r2: Rule, atts: Set[Attribute], op: String) : Expression = {
-	  var common:Set[Expression] = findCommons(r1,r2,op)
+	def findCommon(c1 : Expression, c2: Expression, atts: Set[Attribute], op: String) : Expression = {
+	  var common:Set[Expression] = findCommons(c1,c2,op)
 	  var result:Expression = common.head
 	  var max = nbKnownAttributes(result, atts)
 	  for(c <- common) {
@@ -405,9 +407,7 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
     	  return null
 	}
 	
-	def findCommons(r1 : Rule, r2: Rule,op: String) : Set[Expression]= {
-	  var c1 = r1.condition
-	  var c2 = r2.condition
+	def findCommons(c1 : Expression, c2: Expression,op: String) : Set[Expression]= {
 	  var s1 = split(c1,op)
 	  var s2 = split(c2,op)
 	  var result = Set[Expression]()
@@ -431,6 +431,12 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
 	
 	def removeCommon(condition : Expression, common: Expression) : Expression = condition match{
 	  case Or(x,y) => return Or(removeCommon(x,common),removeCommon(y,common))
+	  case x if x == common => return AlwaysFalse
+	  case x => return x
+	}
+	
+	def removeCommonAnd(condition: Expression, common: Expression):Expression = condition match{
+	  case And(x,y) => return And(removeCommonAnd(x,common),removeCommonAnd(y,common))
 	  case x if x == common => return AlwaysFalse
 	  case x => return x
 	}
@@ -493,31 +499,40 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
 	}
 	
 	def expandAnd(policy: Policy, atts: Set[Attribute]):Unit= {
-	  var r1 = policy.subpolicies(0).asInstanceOf[Rule]
-	  var r2 = policy.subpolicies(1).asInstanceOf[Rule]
-	  var common = findCommon(r1,r2,atts,"And")
+	  var c1 = getExpression(policy.subpolicies(0))
+	  var c2 = getExpression(policy.subpolicies(1))
+	  var common = findCommon(c1,c2,atts,"And")
 	  if(common != null){
-	    var e1 = r1.effect
-	  var e2 = r2.effect
-	  var cond1 = r1.condition
-	  var cond2 = r2.condition
-	  var newSubrule1 = new Rule(r1.id)(e1,removeCommonAnd(cond1,common),r1.obligationActions)
-	  var newSubrule2 = new Rule(r2.id)(e2,removeCommonAnd(cond2,common),r2.obligationActions)
-	  var newsubs = List(newSubrule1,newSubrule2)
-	  var newPol = new Policy(policy.id)(policy.target,policy.pca,newsubs,policy.obligations)
-	  newPol.parent = Some(policy)
-	  newPol.parent match {
-	    	case Some(x) => {x.subpolicies = replace(x.subpolicies,policy,newPol);expandAnd(x,atts)}
-	    	case None => 
-	    }
-	    
+	    var newsub1 = createNewSub(policy.subpolicies(0),common)
+	    var newsub2 = createNewSub(policy.subpolicies(1),common)
+		var newsubs = List(newsub1,newsub2)
+		var newPol = new Policy(policy.id)(policy.target & common,policy.pca,newsubs,policy.obligations)
+		newPol.parent = Some(policy)
+		newPol.parent match {
+		    case Some(x) => {x.subpolicies = replace(x.subpolicies,policy,newPol);expandAnd(x,atts)}
+		    case None => 
+		}
 	  }
 	}
 	
-	def removeCommonAnd(condition: Expression, common: Expression):Expression = condition match{
-	  case And(x,y) => return And(removeCommonAnd(x,common),removeCommonAnd(y,common))
-	  case x if x == common => return AlwaysFalse
-	  case x => return x
+	def getExpression(aPolicy: AbstractPolicy) : Expression = aPolicy match {
+	  case x:Rule => return x.condition
+	  case x:Policy => return x.target
+	  case _ => return null
+	}
+	
+	def createNewSub(aPolicy: AbstractPolicy, common: Expression) : AbstractPolicy = aPolicy match {
+	  case x:Rule => return createNewSub(x,common)
+	  case x:Policy => return createNewSub(x,common)
+	  case _ => return null
+	}
+	
+	def createNewSub(rule: Rule, common: Expression) : Rule = {
+	  return new Rule(rule.id)(rule.effect,removeCommonAnd(rule.condition,common),rule.obligationActions)
+	}
+	
+	def createNewSub(policy: Policy, common: Expression) : Policy = {
+	  return new Policy(policy.id)(removeCommon(policy.target,common),policy.pca,policy.subpolicies,policy.obligations)
 	}
 	
 	var ruleIndex = 0
