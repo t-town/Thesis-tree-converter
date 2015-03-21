@@ -57,8 +57,22 @@ object ExamplePol extends BasicPolicy with GeneralTemplates{
           (!(subject.department === "cardiology"))
       )
   
-  val testPol3 = null //TODO test expand and
+  val testPol3 = Policy("ehealth") := when (action.id === "view" & resource.type_ === "patientstatus") apply DenyOverrides to ( 
+      stapl.core.Rule("DNF-1") := permit iff 
+      	((subject.location === "hospital") & (subject.department === "elder_care")) ,
+      stapl.core.Rule("DNF-2") := deny iff 
+      	((subject.location === "hospital") & (subject.department === "cardiology")) 
+      )
   
+  val testPol4 = Policy("ehealth") := when (action.id === "view" & resource.type_ === "patientstatus") apply DenyOverrides to (
+      stapl.core.Rule("RLevel1") := permit iff ("nurse" in subject.roles),
+      Policy("level one") := when () apply PermitOverrides to (
+      stapl.core.Rule("DNF-1") := permit iff 
+      	((subject.location === "hospital") & (subject.department === "elder_care")) ,
+      stapl.core.Rule("DNF-2") := deny iff 
+      	((subject.location === "hospital") & (subject.department === "cardiology")) 
+      )
+  )
 }
 
 @Test
@@ -175,7 +189,49 @@ class ExpansionTest {
   
   @Test
   def expandAndTest() = {
-    //TODO test
+    var npdp = new PDP(testPol3, new AttributeFinder)
+    
+    var ev1 = npdp.evaluate("maarten", "view", "doc123",
+        subject.roles -> List("medical_personnel", "physician"),
+        subject.location -> "hospital",
+        subject.triggered_breaking_glass -> true,
+        subject.department -> "cardiology",
+        resource.type_ -> "patientstatus",
+        resource.owner_withdrawn_consents -> List("subject1","subject2","subject3"))
+    
+    converter.expandAnd(testPol3,atts)
+    
+    var ev2 = npdp.evaluate("maarten", "view", "doc123",
+        subject.roles -> List("medical_personnel", "physician"),
+        subject.location -> "hospital",
+        subject.triggered_breaking_glass -> true,
+        subject.department -> "cardiology",
+        resource.type_ -> "patientstatus",
+        resource.owner_withdrawn_consents -> List("subject1","subject2","subject3"))
+    
+    assert(ev1 == ev2)
+    
+    var npdp2 = new PDP(testPol4, new AttributeFinder)
+    
+    var ev3 = npdp2.evaluate("maarten", "view", "doc123",
+        subject.roles -> List("medical_personnel", "physician"),
+        subject.location -> "hospital",
+        subject.triggered_breaking_glass -> true,
+        subject.department -> "cardiology",
+        resource.type_ -> "patientstatus",
+        resource.owner_withdrawn_consents -> List("subject1","subject2","subject3"))
+    
+    converter.expandAnd(testPol4.subpolicies(1).asInstanceOf[Policy],atts)
+    
+    var ev4 = npdp2.evaluate("maarten", "view", "doc123",
+        subject.roles -> List("medical_personnel", "physician"),
+        subject.location -> "hospital",
+        subject.triggered_breaking_glass -> true,
+        subject.department -> "cardiology",
+        resource.type_ -> "patientstatus",
+        resource.owner_withdrawn_consents -> List("subject1","subject2","subject3"))
+    
+    assert(ev3 == ev4)
   }
   
 }

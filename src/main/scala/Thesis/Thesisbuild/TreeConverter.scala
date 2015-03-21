@@ -12,7 +12,11 @@ import aima.core.logic.propositional.inference.DPLLSatisfiable
 import aima.core.logic.propositional.inference.TTEntails
 import aima.core.logic.propositional.kb.KnowledgeBase
 
-class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribute]) {
+class TreeConverter(var root: Policy, val knownAttributes : Set[Attribute]) {
+  
+  //TODO decomment
+  //constructer to auto-convert
+  //root = expand(normalise(reduce(root)))
   
   /****************************************************************************
    ****************************************************************************
@@ -44,7 +48,7 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
 	 return result
 	}
 	
-	def normalise(policy : Policy) : AbstractPolicy = {
+	def normalise(policy : Policy) : Policy = {
 	  var p = null
 	  var newsubs = List[AbstractPolicy]()
 	  for (p <- policy.subpolicies.reverse){
@@ -62,7 +66,7 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
 	  return policy
 	}
 	
-	def expand(policy : Policy) : AbstractPolicy = {
+	def expand(policy : Policy) : Policy = {
 	  var splitPol = policy
 	  var knownAtts = knownAttributes
 	  while(canBeSplit(splitPol,knownAtts)){
@@ -72,7 +76,7 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
 	  }
 	  ruleIndex = 0
 	  policyIndex = 0
-	  //expandAnd(getLowestPolicies(policy),knownAtts) TODO test
+	  expandAnd(getLowestPolicies(policy),knownAtts)
 	  return policy
 	}
 	
@@ -311,6 +315,8 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
 	    case Connective.AND => return And(revertToCondition(sentence.getSimplerSentence(0)),revertToCondition(sentence.getSimplerSentence(1)))
 	    case Connective.OR => return Or(revertToCondition(sentence.getSimplerSentence(0)),revertToCondition(sentence.getSimplerSentence(1)))
 	    case Connective.NOT => return Not(revertToCondition(sentence.getSimplerSentence(0)))
+	    case null if sentence.toString() == "True" => return AlwaysTrue
+	    case null if sentence.toString() == "False" => return AlwaysFalse
 	    case null => return propMap.get(sentence.asInstanceOf[PropositionSymbol].getSymbol()).getOrElse(null)
 	    case _ => return null
 	  }
@@ -392,8 +398,8 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
 	
 	def findCommon(c1 : Expression, c2: Expression, atts: Set[Attribute], op: String) : Expression = {
 	  var common:Set[Expression] = findCommons(c1,c2,op)
-	  var result:Expression = common.head
-	  var max = nbKnownAttributes(result, atts)
+	  var result:Expression = AlwaysFalse
+	  var max = -1
 	  for(c <- common) {
 	    var n = nbKnownAttributes(c,atts)
 	    if(n > max) {
@@ -426,8 +432,13 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
 	  var test = new TTEntails
 	  var kb = new KnowledgeBase
 	  kb.tell(s1)
-	  return test.ttEntails(kb, s2) & s1.getNumberSimplerSentences() == s2.getNumberSimplerSentences()
+	  var r1 = revertToCondition(s1)
+	  var r2 = revertToCondition(s2)
+	  return test.ttEntails(kb, s2) & s1.getNumberSimplerSentences() == s2.getNumberSimplerSentences() &
+	  (revertToCondition(s1) != AlwaysTrue & revertToCondition(s1) != AlwaysFalse
+	      & revertToCondition(s2) != AlwaysTrue & revertToCondition(s2) != AlwaysFalse )
 	}
+	//TODO this feels hacky this needs improvement
 	
 	def removeCommon(condition : Expression, common: Expression) : Expression = condition match{
 	  case Or(x,y) => return Or(removeCommon(x,common),removeCommon(y,common))
@@ -437,7 +448,7 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
 	
 	def removeCommonAnd(condition: Expression, common: Expression):Expression = condition match{
 	  case And(x,y) => return And(removeCommonAnd(x,common),removeCommonAnd(y,common))
-	  case x if x == common => return AlwaysFalse
+	  case x if x == common => return AlwaysTrue
 	  case x => return x
 	}
 	
@@ -506,10 +517,12 @@ class TreeConverter(val root: AbstractPolicy, val knownAttributes : Set[Attribut
 	    var newsub1 = createNewSub(policy.subpolicies(0),common)
 	    var newsub2 = createNewSub(policy.subpolicies(1),common)
 		var newsubs = List(newsub1,newsub2)
-		var newPol = new Policy(policy.id)(policy.target & common,policy.pca,newsubs,policy.obligations)
-		newPol.parent = Some(policy)
-		newPol.parent match {
-		    case Some(x) => {x.subpolicies = replace(x.subpolicies,policy,newPol);expandAnd(x,atts)}
+		policy.target = policy.target & common
+		policy.subpolicies = newsubs
+		for(p <- newsubs)
+		  p.parent = Some(policy)
+		policy.parent match {
+		    case Some(x) => expandAnd(x,atts)
 		    case None => 
 		}
 	  }
