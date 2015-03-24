@@ -9,14 +9,14 @@ import aima.core.logic.propositional.parsing.ast.AtomicSentence
 import aima.core.logic.propositional.parsing.ast.PropositionSymbol
 import aima.core.logic.propositional.visitors.ConvertToCNF
 import aima.core.logic.propositional.inference.DPLLSatisfiable
-import aima.core.logic.propositional.inference.TTEntails
-import aima.core.logic.propositional.kb.KnowledgeBase
 
 class TreeConverter(var root: Policy, val knownAttributes : Set[Attribute]) {
   
-  //TODO decomment
-  //constructer to auto-convert
-  //root = expand(normalise(reduce(root)))
+  def convertTree() = {
+    var s1 = reduce(root)
+    var s2 = normalise(s1)
+    root = expand(s2)
+  }
   
   /****************************************************************************
    ****************************************************************************
@@ -427,18 +427,10 @@ class TreeConverter(var root: Policy, val knownAttributes : Set[Attribute]) {
 	}
 	
 	def isEquivalent(e1 : Expression, e2 : Expression):Boolean = {
-	  var s1 = convertToSentence(e1)
-	  var s2 = convertToSentence(e2)
-	  var test = new TTEntails
-	  var kb = new KnowledgeBase
-	  kb.tell(s1)
-	  var r1 = revertToCondition(s1)
-	  var r2 = revertToCondition(s2)
-	  return test.ttEntails(kb, s2) & s1.getNumberSimplerSentences() == s2.getNumberSimplerSentences() &
-	  (revertToCondition(s1) != AlwaysTrue & revertToCondition(s1) != AlwaysFalse
-	      & revertToCondition(s2) != AlwaysTrue & revertToCondition(s2) != AlwaysFalse )
+	  var s = new ComplexSentence(Connective.NOT,
+	      new ComplexSentence(Connective.BICONDITIONAL,convertToSentence(e1),convertToSentence(e2)))
+	  return !(new DPLLSatisfiable().dpllSatisfiable(s))
 	}
-	//TODO this feels hacky this needs improvement
 	
 	def removeCommon(condition : Expression, common: Expression) : Expression = condition match{
 	  case Or(x,y) => return Or(removeCommon(x,common),removeCommon(y,common))

@@ -8,6 +8,7 @@ import stapl.templates.general.GeneralTemplates
 import Thesis.Thesisbuild.TreeConverter
 import stapl.core.pdp.PDP
 import stapl.core.pdp.AttributeFinder
+import Thesis.Thesisbuild.TreeConverter
 
 object ExamplePol extends BasicPolicy with GeneralTemplates{
   
@@ -38,6 +39,11 @@ object ExamplePol extends BasicPolicy with GeneralTemplates{
   subject.admitted_patients_in_nurse_unit = ListAttribute(String)
   subject.allowed_to_access_pms = SimpleAttribute(Bool)
   subject.responsible_patients = ListAttribute(String)
+  
+  val root = Policy("root"):= when (action.id === "view" & resource.type_ === "patientstatus") apply DenyOverrides to ( 
+      stapl.core.Rule("root-1") := deny iff !("nurse" in subject.roles),
+      stapl.core.Rule("root-2") := permit iff  ((subject.location === "hospital") & (subject.department === "elder_care"))
+      )
   
   val testPol1 = Policy("ehealth") := when (action.id === "view" & resource.type_ === "patientstatus") apply DenyOverrides to ( 
       stapl.core.Rule("DNF-1") := deny iff ("nurse" in subject.roles) | 
@@ -73,6 +79,16 @@ object ExamplePol extends BasicPolicy with GeneralTemplates{
       	((subject.location === "hospital") & (subject.department === "cardiology")) 
       )
   )
+  
+  val testPol5 = Policy("ehealth") := when (action.id === "view" & resource.type_ === "patientstatus") apply DenyOverrides to (
+      stapl.core.Rule("RLevel1") := permit iff ("nurse" in subject.roles) | ("physician" in subject.roles),
+      Policy("level one") := when () apply PermitOverrides to (
+      stapl.core.Rule("DNF-1") := permit iff 
+      	((subject.location === "hospital") & (subject.department === "elder_care")) ,
+      stapl.core.Rule("DNF-2") := deny iff 
+      	((subject.location === "hospital") & (subject.department === "cardiology")) 
+      )
+  )
 }
 
 @Test
@@ -81,7 +97,7 @@ class ExpansionTest {
   import ExamplePol._
   
   val atts = Set(subject.roles)
-  val converter = new TreeConverter(testPol1, atts)
+  val converter = new TreeConverter(root, atts)
   val pdp = new PDP(testPol1, new AttributeFinder)
 
   @Test
@@ -232,6 +248,34 @@ class ExpansionTest {
         resource.owner_withdrawn_consents -> List("subject1","subject2","subject3"))
     
     assert(ev3 == ev4)
+  }
+  
+  @Test
+  def convertTreetest() = {
+    var nconvert = new TreeConverter(testPol5, atts)
+    var npdp = new PDP(testPol5, new AttributeFinder)
+    
+    var ev1 = npdp.evaluate("maarten", "view", "doc123",
+        subject.roles -> List("medical_personnel", "physician"),
+        subject.location -> "hospital",
+        subject.triggered_breaking_glass -> true,
+        subject.department -> "cardiology",
+        resource.type_ -> "patientstatus",
+        resource.owner_withdrawn_consents -> List("subject1","subject2","subject3"))
+        
+    nconvert.convertTree
+    npdp = new PDP(nconvert.root, new AttributeFinder)
+    
+    var ev2 = npdp.evaluate("maarten", "view", "doc123",
+        subject.roles -> List("medical_personnel", "physician"),
+        subject.location -> "hospital",
+        subject.triggered_breaking_glass -> true,
+        subject.department -> "cardiology",
+        resource.type_ -> "patientstatus",
+        resource.owner_withdrawn_consents -> List("subject1","subject2","subject3"))
+        
+    assert(ev1==ev2)
+    
   }
   
 }
