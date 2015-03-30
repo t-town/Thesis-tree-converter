@@ -434,13 +434,13 @@ class TreeConverter(var root: Policy, val knownAttributes : Set[Attribute]) {
 	
 	def removeCommon(condition : Expression, common: Expression) : Expression = condition match{
 	  case Or(x,y) => return Or(removeCommon(x,common),removeCommon(y,common))
-	  case x if x == common => return AlwaysFalse
+	  case x if isEquivalent(common, x) => return AlwaysFalse
 	  case x => return x
 	}
 	
 	def removeCommonAnd(condition: Expression, common: Expression):Expression = condition match{
 	  case And(x,y) => return And(removeCommonAnd(x,common),removeCommonAnd(y,common))
-	  case x if x == common => return AlwaysTrue
+	  case x if isEquivalent(common, x) => return AlwaysTrue
 	  case x => return x
 	}
 	
