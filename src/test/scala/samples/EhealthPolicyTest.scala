@@ -40,6 +40,7 @@ import stapl.core.Permit
 import stapl.core.log
 import Thesis.Thesisbuild.TreeConverter
 import stapl.core.Rule
+import Thesis.Thesisbuild.MyAttributeFinderModule
 
 object EhealthPolicyTest {
   
@@ -55,9 +56,11 @@ class EhealthPolicyTest extends AssertionsForJUnit {
   import EhealthPolicy._
   // set up the PDP, use an empty attribute finder since we will provide all attributes in the request
   //val pdp = new PDP(javaLikePolicy, new AttributeFinder)
+  val finder = new AttributeFinder
+  finder += new MyAttributeFinderModule
   val converter = new TreeConverter(naturalPolicy, null)
   //converter.convertTree()
-  val pdp = new PDP(converter.root, new AttributeFinder)
+  val pdp = new PDP(converter.root, finder)
 
   @Before def setup() {
     // nothing to do
@@ -70,7 +73,7 @@ class EhealthPolicyTest extends AssertionsForJUnit {
   @Test def testDenyWithdrawnConsents() {
     assert(pdp.evaluate("maarten", "view", "doc123",
         subject.roles -> List("medical_personnel"),
-        subject.triggered_breaking_glass -> false,
+        //subject.triggered_breaking_glass -> false,
         resource.type_ -> "patientstatus",
         resource.owner_withdrawn_consents -> List("subject1","subject2","subject3","maarten")) === Result(Deny,List()))
   }
