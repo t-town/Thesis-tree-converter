@@ -3,7 +3,7 @@ package samples
 import org.junit._
 import Assert._
 import stapl.core._
-import stapl.examples._
+
 import stapl.templates.general.GeneralTemplates
 import Thesis.Thesisbuild.TreeConverter
 import stapl.core.pdp.PDP

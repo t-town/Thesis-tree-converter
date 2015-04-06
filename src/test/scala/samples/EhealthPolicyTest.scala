@@ -19,7 +19,6 @@
  */
 package samples
 
-import stapl.examples.policies.EhealthPolicy
 import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
@@ -29,10 +28,6 @@ import stapl.core.pdp.RequestCtx
 import org.junit.Assert._
 import org.scalatest.junit.AssertionsForJUnit
 import org.joda.time.LocalDateTime
-import EhealthPolicy.environment
-import EhealthPolicy.naturalPolicy
-import EhealthPolicy.resource
-import EhealthPolicy.subject
 import stapl.core.Result
 import stapl.core.NotApplicable
 import stapl.core.Deny
@@ -41,6 +36,7 @@ import stapl.core.log
 import Thesis.Thesisbuild.TreeConverter
 import stapl.core.Rule
 import Thesis.Thesisbuild.MyAttributeFinderModule
+import stapl.examples.policies.EhealthPolicy
 
 object EhealthPolicyTest {
   
