@@ -50,6 +50,8 @@ object App {
 
 object ExamplePolicy extends BasicPolicy with GeneralTemplates{
   
+  import stapl.core.dsl._
+  
   environment.currentDateTime = SimpleAttribute(DateTime)
   resource.type_ = SimpleAttribute(String)
   resource.owner_withdrawn_consents = ListAttribute(String)

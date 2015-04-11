@@ -11,6 +11,8 @@ import org.joda.time.LocalDateTime
 
 object ExamplePolicy extends BasicPolicy with GeneralTemplates{
   
+  import stapl.core.dsl._
+  
   environment.currentDateTime = SimpleAttribute(DateTime)
   resource.type_ = SimpleAttribute(String)
   resource.owner_withdrawn_consents = ListAttribute(String)
@@ -47,29 +49,29 @@ object ExamplePolicy extends BasicPolicy with GeneralTemplates{
     val testDO = Policy("policyset:11") := when ("nurse" in subject.roles) apply DenyOverrides to (      
 	      // A patient can only access the PMS if (still) allowed by the hospital (e.g., has 
     	  // subscribed to the PMS, but is not paying any more).
-	      stapl.core.Rule("policy:23") := deny iff !subject.allowed_to_access_pms,
+	      Rule("policy:23") := deny iff !subject.allowed_to_access_pms,
 	      
 	      // A patient can only view his own status.
-	      stapl.core.Rule("policy:16") := deny iff !(subject.location === "hospital"),
+	      Rule("policy:16") := deny iff !(subject.location === "hospital"),
 	      
-	      stapl.core.Rule("policy:25") := permit
+	      Rule("policy:25") := permit
     )
   
   val testFA = Policy("policyset:11") := when ("nurse" in subject.roles) apply FirstApplicable to (      
 	      // A patient can only access the PMS if (still) allowed by the hospital (e.g., has 
     	  // subscribed to the PMS, but is not paying any more).
-	      stapl.core.Rule("policy:23") := deny iff !subject.allowed_to_access_pms,
+	      Rule("policy:23") := deny iff !subject.allowed_to_access_pms,
 	      
-	      stapl.core.Rule("policy:25") := permit
+	      Rule("policy:25") := permit
     )
   
   val testPhysicians = Policy("ehealth") := when (action.id === "view" & resource.type_ === "patientstatus") apply DenyOverrides to (  
     Policy("policyset:2") := when ("physician" in subject.roles) apply FirstApplicable to (      
       // Of the physicians, only gps, physicians of the cardiology department, physicians of the elder care department and physicians of the emergency department can access the monitoring system.
-      stapl.core.Rule("policy:3") := deny iff !((subject.department === "cardiology") | (subject.department === "elder_care") | (subject.department === "emergency") | ("gp" in subject.roles)),
+      Rule("policy:3") := deny iff !((subject.department === "cardiology") | (subject.department === "elder_care") | (subject.department === "emergency") | ("gp" in subject.roles)),
       
       // All of the previous physicians except for the GPs can access the monitoring system in case of emergency.
-      stapl.core.Rule("policy:4") := permit iff (((subject.department === "cardiology") | (subject.department === "elder_care") | (subject.department === "emergency"))
+      Rule("policy:4") := permit iff (((subject.department === "cardiology") | (subject.department === "elder_care") | (subject.department === "emergency"))
                                       & (subject.triggered_breaking_glass | resource.operator_triggered_emergency | resource.indicates_emergency)),
       
       // For GPs: only permit if in consultation or treated in the last six months or primary physician or responsible in the system.
@@ -83,12 +85,12 @@ object ExamplePolicy extends BasicPolicy with GeneralTemplates{
       // For cardiologists.
       Policy("policyset:4") := when (subject.department === "cardiology") apply PermitOverrides to (        
         // Permit for head physician.
-        stapl.core.Rule("policy:7") := permit iff (subject.is_head_physician),
+        Rule("policy:7") := permit iff (subject.is_head_physician),
         
         // Permit if treated the patient or treated in team.
-        stapl.core.Rule("policy:8") := permit iff (resource.owner_id in subject.treated) | (resource.owner_id in subject.treated_by_team),
+        Rule("policy:8") := permit iff (resource.owner_id in subject.treated) | (resource.owner_id in subject.treated_by_team),
         
-        stapl.core.Rule("policy:9") := deny
+        Rule("policy:9") := deny
       ),
       
       // For physicians of elder care department: only permit if admitted in care unit or treated in the last six months.
@@ -106,16 +108,16 @@ object ExamplePolicy extends BasicPolicy with GeneralTemplates{
   val testNurses = Policy("ehealth") := when (action.id === "view" & resource.type_ === "patientstatus") apply DenyOverrides to (  
     Policy("policyset:7") := when ("nurse" in subject.roles) apply FirstApplicable to (      
       // Of the nurses, only nurses of the cardiology department or the elder care department can access the PMS.
-      stapl.core.Rule("policy:14") := deny iff !((subject.department === "cardiology") | (subject.department === "elder_care")),
+      Rule("policy:14") := deny iff !((subject.department === "cardiology") | (subject.department === "elder_care")),
       
       // Nurses can only access the PMS during their shifts.
-      stapl.core.Rule("policy:15") := deny iff !((environment.currentDateTime gteq subject.shift_start) & (environment.currentDateTime lteq subject.shift_stop)),
+      Rule("policy:15") := deny iff !((environment.currentDateTime gteq subject.shift_start) & (environment.currentDateTime lteq subject.shift_stop)),
       
       // Nurses can only access the PMS from the hospital.
-      stapl.core.Rule("policy:16") := deny iff !(subject.location === "hospital"),
+      Rule("policy:16") := deny iff !(subject.location === "hospital"),
       
       // Nurses can only view the patient's status of the last five days.
-      stapl.core.Rule("policy:17") := deny iff !(environment.currentDateTime lteq (resource.created + 5.days)),
+      Rule("policy:17") := deny iff !(environment.currentDateTime lteq (resource.created + 5.days)),
       
       // For nurses of cardiology department: they can only view the patient status of a patient 
       // in their nurse unit for whom they are assigned responsible, up to three days after they were discharged.
@@ -127,7 +129,7 @@ object ExamplePolicy extends BasicPolicy with GeneralTemplates{
       // For nurses of the elder care department.
       Policy("policyset:9") := when (subject.department === "elder_care") apply DenyOverrides to (
         // Of the nurses of the elder care department, only nurses who have been allowed to use the PMS can access the PMS.
-        stapl.core.Rule("policy:20") := deny iff !subject.allowed_to_access_pms,
+        Rule("policy:20") := deny iff !subject.allowed_to_access_pms,
         
         // Nurses of the elder care department can only view the patient status of a patient 
         // who is currently admitted to their nurse unit and for whome they are assigned responsible.
@@ -142,34 +144,34 @@ object ExamplePolicy extends BasicPolicy with GeneralTemplates{
     Policy("policyset:11") := when ("patient" in subject.roles) apply FirstApplicable to (      
 	      // A patient can only access the PMS if (still) allowed by the hospital (e.g., has 
     	  // subscribed to the PMS, but is not paying any more).
-	      stapl.core.Rule("policy:23") := deny iff !subject.allowed_to_access_pms,
+	      Rule("policy:23") := deny iff !subject.allowed_to_access_pms,
 	      
 	      // A patient can only view his own status.
-	      stapl.core.Rule("policy:24") := deny iff !(resource.owner_id === subject.id),
+	      Rule("policy:24") := deny iff !(resource.owner_id === subject.id),
 	      
-	      stapl.core.Rule("policy:25") := permit
+	      Rule("policy:25") := permit
     )
     )
   
   val testOthers = Policy("ehealth") := when (action.id === "view" & resource.type_ === "patientstatus") apply DenyOverrides to (    
     // The consent policy.
     Policy("policy:1") := when ("medical_personnel" in subject.roles) apply PermitOverrides to (
-        stapl.core.Rule("consent") := deny iff (subject.id in resource.owner_withdrawn_consents),
-        stapl.core.Rule("breaking-glass") := permit iff (subject.triggered_breaking_glass) performing (log(subject.id + " performed breaking-the-glass procedure"))
+        Rule("consent") := deny iff (subject.id in resource.owner_withdrawn_consents),
+        Rule("breaking-glass") := permit iff (subject.triggered_breaking_glass) performing (log(subject.id + " performed breaking-the-glass procedure"))
     ) performing (log("permit because of breaking-the-glass procedure") on Permit),
     
     // Only physicians, nurses and patients can access the monitoring system.
-    stapl.core.Rule("policy:2") := deny iff !(("nurse" in subject.roles) | ("physician" in subject.roles) | ("patient" in subject.roles))
+    Rule("policy:2") := deny iff !(("nurse" in subject.roles) | ("physician" in subject.roles) | ("patient" in subject.roles))
 
     )
   
   val testDNF = Policy("DNF-parent") := when (action.id === "view" & resource.type_ === "patientstatus") apply DenyOverrides to (    
       //A&(B|C)&D
-      stapl.core.Rule("DNF-1") := deny iff (("nurse" in subject.roles) & 
+      Rule("DNF-1") := deny iff (("nurse" in subject.roles) & 
           ((subject.department === "cardiology") | (subject.department === "elder_care")) & 
           (subject.location === "hospital")),
       //A&(!B|C)&D
-      stapl.core.Rule("DNF-2") := permit iff (("nurse" in subject.roles) & 
+      Rule("DNF-2") := permit iff (("nurse" in subject.roles) & 
           (!(subject.department === "cardiology") | (subject.department === "elder_care")) &
           (subject.location === "hospital"))
      )

@@ -32,7 +32,6 @@ import stapl.core.Result
 import stapl.core.NotApplicable
 import stapl.core.Deny
 import stapl.core.Permit
-import stapl.core.log
 import Thesis.Thesisbuild.TreeConverter
 import stapl.core.Rule
 import Thesis.Thesisbuild.MyAttributeFinderModule

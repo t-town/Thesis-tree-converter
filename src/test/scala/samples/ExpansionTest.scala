@@ -12,6 +12,8 @@ import Thesis.Thesisbuild.TreeConverter
 
 object ExamplePol extends BasicPolicy with GeneralTemplates{
   
+  import stapl.core.dsl._
+  
   environment.currentDateTime = SimpleAttribute(DateTime)
   resource.type_ = SimpleAttribute(String)
   resource.owner_withdrawn_consents = ListAttribute(String)
@@ -41,51 +43,51 @@ object ExamplePol extends BasicPolicy with GeneralTemplates{
   subject.responsible_patients = ListAttribute(String)
   
   val root = Policy("root"):= when (action.id === "view" & resource.type_ === "patientstatus") apply DenyOverrides to ( 
-      stapl.core.Rule("root-1") := deny iff !("nurse" in subject.roles),
-      stapl.core.Rule("root-2") := permit iff  ((subject.location === "hospital") & (subject.department === "elder_care"))
+      Rule("root-1") := deny iff !("nurse" in subject.roles),
+      Rule("root-2") := permit iff  ((subject.location === "hospital") & (subject.department === "elder_care"))
       )
   
   val testPol1 = Policy("ehealth") := when (action.id === "view" & resource.type_ === "patientstatus") apply DenyOverrides to ( 
-      stapl.core.Rule("DNF-1") := deny iff ("nurse" in subject.roles) | 
+      Rule("DNF-1") := deny iff ("nurse" in subject.roles) | 
           ((subject.location === "hospital") & (subject.department === "elder_care")) |
           ((subject.department === "cardiology")),
-      stapl.core.Rule("DNF-2") := permit iff ("nurse" in subject.roles) | 
+      Rule("DNF-2") := permit iff ("nurse" in subject.roles) | 
           ((subject.location === "hospital") & (subject.department === "elder_care")) |
           (!(subject.department === "cardiology"))
       )
   
   val testPol2 = Policy("ehealth") := when (action.id === "view" & resource.type_ === "patientstatus") apply DenyOverrides to ( 
-      stapl.core.Rule("DNF-1") := deny iff ("nurse" in subject.roles) | 
+      Rule("DNF-1") := deny iff ("nurse" in subject.roles) | 
           ((subject.location === "hospital") & (subject.department === "elder_care")) |
           ((subject.department === "cardiology")),
-      stapl.core.Rule("DNF-2") := permit iff ("nurse" in subject.roles) | 
+      Rule("DNF-2") := permit iff ("nurse" in subject.roles) | 
           ((subject.department === "elder_care") & (subject.location === "hospital")) |
           (!(subject.department === "cardiology"))
       )
   
   val testPol3 = Policy("ehealth") := when (action.id === "view" & resource.type_ === "patientstatus") apply DenyOverrides to ( 
-      stapl.core.Rule("DNF-1") := permit iff 
+	  Rule("DNF-1") := permit iff 
       	((subject.location === "hospital") & (subject.department === "elder_care")) ,
-      stapl.core.Rule("DNF-2") := deny iff 
+      Rule("DNF-2") := deny iff 
       	((subject.location === "hospital") & (subject.department === "cardiology")) 
       )
   
   val testPol4 = Policy("ehealth") := when (action.id === "view" & resource.type_ === "patientstatus") apply DenyOverrides to (
-      stapl.core.Rule("RLevel1") := permit iff ("nurse" in subject.roles),
+      Rule("RLevel1") := permit iff ("nurse" in subject.roles),
       Policy("level one") := when () apply PermitOverrides to (
-      stapl.core.Rule("DNF-1") := permit iff 
+      Rule("DNF-1") := permit iff 
       	((subject.location === "hospital") & (subject.department === "elder_care")) ,
-      stapl.core.Rule("DNF-2") := deny iff 
+      Rule("DNF-2") := deny iff 
       	((subject.location === "hospital") & (subject.department === "cardiology")) 
       )
   )
   
   val testPol5 = Policy("ehealth") := when (action.id === "view" & resource.type_ === "patientstatus") apply DenyOverrides to (
-      stapl.core.Rule("RLevel1") := permit iff ("nurse" in subject.roles) | ("physician" in subject.roles),
+      Rule("RLevel1") := permit iff ("nurse" in subject.roles) | ("physician" in subject.roles),
       Policy("level one") := when () apply PermitOverrides to (
-      stapl.core.Rule("DNF-1") := permit iff 
+      Rule("DNF-1") := permit iff 
       	((subject.location === "hospital") & (subject.department === "elder_care")) ,
-      stapl.core.Rule("DNF-2") := deny iff 
+      Rule("DNF-2") := deny iff 
       	((subject.location === "hospital") & (subject.department === "cardiology")) 
       )
   )
