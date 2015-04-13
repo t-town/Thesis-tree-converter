@@ -119,7 +119,7 @@
             <include>**/*Test.*</include>
             <include>**/*Suite.*</include>
           </includes>
-	  <skipTests>false</skipTests>
+	  <skipTests>true</skipTests>
         </configuration>
       </plugin>
     </plugins>
