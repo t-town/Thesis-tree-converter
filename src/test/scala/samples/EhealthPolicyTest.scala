@@ -68,7 +68,7 @@ class EhealthPolicyTest extends AssertionsForJUnit {
   @Test def testDenyWithdrawnConsents() {
     assert(pdp.evaluate("maarten", "view", "doc123",
         subject.roles -> List("medical_personnel"),
-        //subject.triggered_breaking_glass -> false,
+        subject.triggered_breaking_glass -> false,
         resource.type_ -> "patientstatus",
         resource.owner_withdrawn_consents -> List("subject1","subject2","subject3","maarten")) === Result(Deny,List()))
   }
