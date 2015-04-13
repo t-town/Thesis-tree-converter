@@ -47,6 +47,12 @@
     	<version>0.0.1-SNAPSHOT</version>
     </dependency>
     
+    <dependency>
+    	<groupId>stapl</groupId>
+    	<artifactId>stapl-performance</artifactId>
+    	<version>0.0.1-SNAPSHOT</version>
+    </dependency>
+    
     <!-- DNF conversion -->
     <dependency>
         <groupId>com.googlecode.aima-java</groupId>
