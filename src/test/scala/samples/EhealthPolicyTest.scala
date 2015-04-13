@@ -52,9 +52,9 @@ class EhealthPolicyTest extends AssertionsForJUnit {
   // set up the PDP, use an empty attribute finder since we will provide all attributes in the request
   //val pdp = new PDP(javaLikePolicy, new AttributeFinder)
   val finder = new AttributeFinder
-  finder += new MyAttributeFinderModule
+  //finder += new MyAttributeFinderModule
   val converter = new TreeConverter(naturalPolicy, null)
-  //converter.convertTree()
+  converter.convertTree()
   val pdp = new PDP(converter.root, finder)
 
   @Before def setup() {

@@ -510,7 +510,7 @@ class conversionTest{
         resource.owner_withdrawn_consents -> List("subject1","subject2","subject3"))
      
     println("Other test: " + res2.toString())
-    assert(res1 != res2) //because of obligations lololol
+    assert(res1 != res2) //because of obligations
   }
    
    @Test
