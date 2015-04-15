@@ -5,38 +5,127 @@ import stapl.templates.general.GeneralTemplates
 import stapl.performance.Timer
 import stapl.core.pdp.PDP
 import org.joda.time.LocalDateTime
+import stapl.core.pdp.AttributeFinder
+import stapl.core.pdp.RequestCtx
 
 object Experiment {
   import EhealthPolicy._
   
-  val pdp = new PDP(naturalCopyPolicy)
+  val finder = new AttributeFinder
+  finder += new MyAttributeFinderModule
+  val pdp = new PDP(naturalCopyPolicy, finder)
   
   def main(args: Array[String]) {
-  val t = new Timer()
-  for(i <- 1 to 100){
-    t.time(evaluate)
+  val tNormal = new Timer()
+  for(i <- 1 to 1){
+    tNormal.time(test1)
+    tNormal.time(test2)
+    tNormal.time(test3)
+    tNormal.time(test4)
+    tNormal.time(test5)
+    tNormal.time(test6)
+    tNormal.time(test7)
+    tNormal.time(test8)
+    tNormal.time(test9)
+    tNormal.time(test10)
   }
-  println("mean: " + t.mean)
+  println("mean: " + tNormal.mean)
   //TODO code experiments here
 }
   
-  def evaluate() {
-    pdp.evaluate("maarten", "view", "doc123",
-      subject.roles -> List("medical_personnel", "nurse"),
-      subject.triggered_breaking_glass -> false,
-      subject.department -> "elder_care",
-      subject.allowed_to_access_pms -> false, // X
-      subject.shift_start -> new LocalDateTime(2014, 6, 24, 9, 0, 0),
-      subject.shift_stop -> new LocalDateTime(2014, 6, 24, 17, 0, 0),
-      subject.location -> "hospital",
-      subject.admitted_patients_in_nurse_unit -> List("patientX", "patientY"),
-      subject.responsible_patients -> List("patientX", "patientZ"),
-      resource.owner_id -> "patientX",
-      resource.owner_withdrawn_consents -> List("subject1"),
-      resource.type_ -> "patientstatus",
-      resource.created -> new LocalDateTime(2014, 6, 22, 14, 2, 1), // three days ago
-      environment.currentDateTime -> new LocalDateTime(2014, 6, 24, 14, 2, 1))
+  def test1() {
+    pdp.evaluate("test1", "view", "doc123")
   }
+  
+  def test2() {
+    pdp.evaluate("test2", "view", "doc123")
+  }
+  
+  def test3() {
+    pdp.evaluate("test3", "view", "doc123")
+  }
+  
+  def test4() {
+    pdp.evaluate("test4", "view", "doc123")
+  }
+  
+  def test5() {
+    pdp.evaluate("test5", "view", "doc123")
+  }
+  
+  def test6() {
+    pdp.evaluate("maarten", "view", "doc123",
+        subject.roles -> List("medical_personnel", "nurse"),
+        subject.triggered_breaking_glass -> false,
+        subject.department -> "elder_care",
+        subject.allowed_to_access_pms -> true,
+        subject.shift_start -> new LocalDateTime(2014, 6, 24, 9, 0, 0),
+        subject.shift_stop -> new LocalDateTime(2014, 6, 24, 17, 0, 0),
+        subject.location -> "somewhere-not-the-hospital", // X
+        subject.admitted_patients_in_nurse_unit -> List("patientX", "patientY"),
+        subject.responsible_patients -> List("patientX", "patientZ"),
+        resource.owner_id -> "patientX",
+        resource.owner_withdrawn_consents -> List("subject1"),
+        resource.type_ -> "patientstatus",
+        resource.created -> new LocalDateTime(2014, 6, 22, 14, 2, 1), // three days ago
+        environment.currentDateTime -> new LocalDateTime(2014, 6, 24, 14, 2, 1))
+  }
+  
+  def test7() {
+    pdp.evaluate("maarten", "view", "doc123",
+        subject.roles -> List("medical_personnel", "nurse"),
+        subject.triggered_breaking_glass -> false,
+        subject.department -> "elder_care",
+        subject.allowed_to_access_pms -> true,
+        subject.shift_start -> new LocalDateTime(2014, 6, 24, 9, 0, 0),
+        subject.shift_stop -> new LocalDateTime(2014, 6, 24, 17, 0, 0),
+        subject.location -> "hospital",
+        subject.admitted_patients_in_nurse_unit -> List("patientX", "patientY"),
+        subject.responsible_patients -> List("patientY", "patientZ"),
+        resource.owner_id -> "patientX",
+        resource.owner_withdrawn_consents -> List("subject1"),
+        resource.type_ -> "patientstatus",
+        resource.created -> new LocalDateTime(2014, 6, 22, 14, 2, 1), // three days ago
+        environment.currentDateTime -> new LocalDateTime(2014, 6, 24, 14, 2, 1))
+  }
+  
+  def test8() {
+    pdp.evaluate("maarten", "view", "doc123",
+        subject.roles -> List("medical_personnel", "physician"),
+        subject.triggered_breaking_glass -> true,
+        subject.department -> "elder_care",
+        resource.type_ -> "patientstatus",
+        resource.owner_withdrawn_consents -> List("subject1","subject2","subject3","maarten"))
+  }
+  
+  def test9() {
+    pdp.evaluate("maarten", "view", "doc123",
+        subject.roles -> List("medical_personnel", "nurse"),
+        subject.triggered_breaking_glass -> false,
+        subject.department -> "elder_care",
+        subject.allowed_to_access_pms -> true,
+        subject.shift_start -> new LocalDateTime(2014, 6, 24, 9, 0, 0),
+        subject.shift_stop -> new LocalDateTime(2014, 6, 24, 17, 0, 0),
+        subject.location -> "hospital",
+        subject.admitted_patients_in_nurse_unit -> List("patientX", "patientY"),
+        subject.responsible_patients -> List("patientX", "patientZ"),
+        resource.owner_id -> "patientX",
+        resource.owner_withdrawn_consents -> List("subject1"),
+        resource.type_ -> "patientstatus",
+        resource.created -> new LocalDateTime(2014, 6, 22, 14, 2, 1), // three days ago
+        environment.currentDateTime -> new LocalDateTime(2014, 6, 24, 14, 2, 1))
+  }
+  
+   def test10() {
+    pdp.evaluate("maarten", "view", "doc123",
+        subject.roles -> List("medical_personnel", "physician"),
+        subject.triggered_breaking_glass -> true,
+        subject.department -> "cardiology",
+        resource.type_ -> "patientstatus",
+        resource.owner_withdrawn_consents -> List("subject1","subject2","subject3","maarten"))
+  }
+   
+   //TODO fix databases 
 
 }
 
