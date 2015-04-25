@@ -54,7 +54,9 @@ class TreeConverter(var root: Policy, val knownAttributes : Set[Attribute]) {
 	  for (p <- policy.subpolicies.reverse){
 	    var rule = p.asInstanceOf[Rule]
 	    var sentence = convertToSentenceNEW(rule.condition)//TODO patch
+	    println(sentence)
 	    sentence = ConvertToDNF.convert(sentence)
+	    println("conversion complete")
 	    var condition = revertToCondition(sentence)
 	    val newRule = new Rule(rule.id)(rule.effect,condition,List[ObligationAction]())
 	    newRule.parent = Some(policy)

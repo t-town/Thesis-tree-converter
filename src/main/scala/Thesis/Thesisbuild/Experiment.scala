@@ -21,6 +21,21 @@ object Experiment {
   val tNormal = new Timer()
   val tConvert = new Timer()
   
+  var l1,l2,l3,l4,l5,l6,l7,l8,l9,l10:List[Int] = List.empty 
+  
+  //Measuring number of accessed attributes
+    l1 ::= test1(pdp).employedAttributes.size
+    l2 ::= test2(pdp).employedAttributes.size
+    l3 ::= test3(pdp).employedAttributes.size
+    l4 ::= test4(pdp).employedAttributes.size
+    l5 ::= test5(pdp).employedAttributes.size
+    l6 ::= test6(pdp).employedAttributes.size
+    l7 ::= test7(pdp).employedAttributes.size
+    l8 ::= test8(pdp).employedAttributes.size
+    l9 ::= test9(pdp).employedAttributes.size
+   l10 ::= test10(pdp).employedAttributes.size
+
+  //Measuring evaluation time
   for(i <- 1 to 1){
     tNormal.time(test1(pdp))
     tNormal.time(test2(pdp))
@@ -37,45 +52,25 @@ object Experiment {
   //TODO code experiments here
 }
   
-  def test1(pdp : PDP) {
-    pdp.evaluate("test1", "view", "doc123")
-  }
+  def test1(pdp : PDP) = pdp.evaluate("test1", "view", "doc123")
   
-  def test2(pdp : PDP) {
-    pdp.evaluate("test2", "view", "doc123")
-  }
+  def test2(pdp : PDP) = pdp.evaluate("test2", "view", "doc123")
   
-  def test3(pdp : PDP) {
-    pdp.evaluate("test3", "view", "doc123")
-  }
+  def test3(pdp : PDP) = pdp.evaluate("test3", "view", "doc123")
   
-  def test4(pdp : PDP) {
-    pdp.evaluate("test4", "view", "doc123")
-  }
+  def test4(pdp : PDP) = pdp.evaluate("test4", "view", "doc123")
   
-  def test5(pdp : PDP) {
-    pdp.evaluate("test5", "view", "doc123")
-  }
+  def test5(pdp : PDP) = pdp.evaluate("test5", "view", "doc123")
   
-  def test6(pdp : PDP) {
-    pdp.evaluate("test6", "view", "doc123")
-  }
+  def test6(pdp : PDP) = pdp.evaluate("test6", "view", "doc123")
   
-  def test7(pdp : PDP) {
-    pdp.evaluate("test7", "view", "doc123")
-  }
+  def test7(pdp : PDP) = pdp.evaluate("test7", "view", "doc123")
   
-  def test8(pdp : PDP) {
-    pdp.evaluate("test8", "view", "doc123")
-  }
+  def test8(pdp : PDP) = pdp.evaluate("test8", "view", "doc123")
   
-  def test9(pdp : PDP) {
-    pdp.evaluate("test9", "view", "doc123")
-  }
+  def test9(pdp : PDP) = pdp.evaluate("test9", "view", "doc123")
   
-   def test10(pdp : PDP) {
-    pdp.evaluate("test10", "view", "doc123")
-  }
+  def test10(pdp : PDP) = pdp.evaluate("test10", "view", "doc123")
 
 }
 
