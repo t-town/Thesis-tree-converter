@@ -53,8 +53,8 @@ class TreeConverter(var root: Policy, val knownAttributes : Set[Attribute]) {
 	  var newsubs = List[AbstractPolicy]()
 	  for (p <- policy.subpolicies.reverse){
 	    var rule = p.asInstanceOf[Rule]
-	    var sentence = convertToSentenceNEW(rule.condition)//TODO patch
-	    println(sentence)
+	    var sentence = convertToSentence(rule.condition)
+	    println("conversion started")
 	    sentence = ConvertToDNF.convert(sentence)
 	    println("conversion complete")
 	    var condition = revertToCondition(sentence)
@@ -300,11 +300,11 @@ class TreeConverter(var root: Policy, val knownAttributes : Set[Attribute]) {
 	****************************************************************************
 	****************************************************************************/
 	
-	def convertToSentenceNEW(condition:Expression):Sentence = {
+	def convertToSentence(condition:Expression):Sentence = {
 	  condition match {
 	    case And(x,y) => convertAnd(x,y)
 	    case Or(x,y) => convertOr(x,y)
-	    case Not(x) => return new ComplexSentence(Connective.get("~"),convertToSentenceNEW(x))
+	    case Not(x) => return new ComplexSentence(Connective.get("~"),convertToSentence(x))
 	    case AlwaysTrue => return new PropositionSymbol("true")
 	    case AlwaysFalse => return new PropositionSymbol("false")
 	    case x if propMap.valuesIterator.contains(x) => return new PropositionSymbol(propMap.filter(p => x==p._2).head._1)
@@ -313,8 +313,8 @@ class TreeConverter(var root: Policy, val knownAttributes : Set[Attribute]) {
 	}
 	
 	def convertAnd(x: Expression, y: Expression) : Sentence = {
-	  var xs:Sentence = convertToSentenceNEW(x)
-	  var ys:Sentence = convertToSentenceNEW(y)
+	  var xs:Sentence = convertToSentence(x)
+	  var ys:Sentence = convertToSentence(y)
 	  if(xs.toString() == "True"){
 	    if(ys.toString() == "True"){
 	      return new PropositionSymbol("true")
@@ -339,8 +339,8 @@ class TreeConverter(var root: Policy, val knownAttributes : Set[Attribute]) {
 	}
 	
 	def convertOr(x: Expression, y: Expression) : Sentence = {
-	  var xs:Sentence = convertToSentenceNEW(x)
-	  var ys:Sentence = convertToSentenceNEW(y)
+	  var xs:Sentence = convertToSentence(x)
+	  var ys:Sentence = convertToSentence(y)
 	  if(xs.toString() == "False"){
 	    if(ys.toString() == "False"){
 	      return new PropositionSymbol("false")
@@ -361,18 +361,6 @@ class TreeConverter(var root: Policy, val knownAttributes : Set[Attribute]) {
 	    }else {
 	      return new ComplexSentence(Connective.get("|"),xs,ys)
 	    }
-	  }
-	}
-	
-	def convertToSentence(condition: Expression) : Sentence =  { //TODO update
-	  condition match {
-	    case And(x,y) => return new ComplexSentence(Connective.get("&"),convertToSentence(x),convertToSentence(y))
-	    case Or(x,y) => return new ComplexSentence(Connective.get("|"),convertToSentence(x),convertToSentence(y))
-	    case Not(x) => return new ComplexSentence(Connective.get("~"),convertToSentence(x))
-	    case AlwaysTrue => return new PropositionSymbol("true")
-	    case AlwaysFalse => return new PropositionSymbol("false")
-	    case x if propMap.valuesIterator.contains(x) => return new PropositionSymbol(propMap.filter(p => x==p._2).head._1)
-	    case x => {propMap+=(prop+index -> x);index+=1;return new PropositionSymbol(prop+(index-1))}
 	  }
 	}
 	
