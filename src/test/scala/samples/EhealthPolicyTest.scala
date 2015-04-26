@@ -39,24 +39,24 @@ import stapl.examples.policies.EhealthPolicy
 
 object EhealthPolicyTest {
   
+  import EhealthPolicy._
+  
+  val converter = new TreeConverter(naturalPolicy, Set.empty)
+  converter.convertTree();
+  val pdp:PDP = new PDP(converter.root)
+  
   @BeforeClass def setup() {
-    // nothing to do
+
   }
 }
 /**
  * Correctness tests of the e-health policy.
  */
 class EhealthPolicyTest extends AssertionsForJUnit {
-
+  
+  import EhealthPolicyTest._
   import EhealthPolicy._
-  // set up the PDP, use an empty attribute finder since we will provide all attributes in the request
-  //val pdp = new PDP(javaLikePolicy, new AttributeFinder)
-  val finder = new AttributeFinder
-  //finder += new MyAttributeFinderModule
-  val converter = new TreeConverter(naturalPolicy, Set.empty)
-  converter.convertTree()
-  val pdp = new PDP(converter.root, finder)
-
+  
   @Before def setup() {
     // nothing to do
   }
