@@ -275,8 +275,8 @@ class ExpansionTest {
         subject.department -> "cardiology",
         resource.type_ -> "patientstatus",
         resource.owner_withdrawn_consents -> List("subject1","subject2","subject3"))
-        
-    assert(ev1==ev2)
+       
+    assert(ev1.decision==ev2.decision)
     
   }
   
