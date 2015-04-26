@@ -45,12 +45,16 @@ class TreeConverter(var root: Policy, val knownAttributes : Set[Attribute]) {
 	       result = reduce(getHighestParent(reduceLeaves(policy)))
 	    else
 	    	result = reduceLeaves(policy)
+	  if(result.pca != FirstApplicable)
+	    result = convertCA(result,FirstApplicable)
 	 return result
 	}
 	
 	def normalise(policy : Policy) : Policy = {
 	  var p = null
 	  var newsubs = List[AbstractPolicy]()
+	  println(policy.pca)
+	  println("size: " + policy.subpolicies.size)
 	  for (p <- policy.subpolicies.reverse){
 	    var rule = p.asInstanceOf[Rule]
 	    var sentence = convertToSentence(rule.condition)
