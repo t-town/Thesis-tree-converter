@@ -396,7 +396,7 @@ object TestExample extends BasicPolicy with GeneralTemplates {
 	      // A patient can only view his own status.
 	      Rule("policy:24") := deny iff !(resource.owner_id === subject.id),
 	      
-	      Rule("policy:25") := permit
+	      Rule("policy:25") := deny
     )
   )
 }
