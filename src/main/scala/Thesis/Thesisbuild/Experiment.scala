@@ -12,6 +12,7 @@ object Experiment {
   
   import stapl.examples.policies.EhealthPolicy._
   import ExperimentPolicy._
+  import java.io._
   
   val finder = new AttributeFinder
   finder += new MyAttributeFinderModule
@@ -21,22 +22,22 @@ object Experiment {
   val tNormal = new Timer()
   val tConvert = new Timer()
   
-  var l1,l2,l3,l4,l5,l6,l7,l8,l9,l10:List[Int] = List.empty 
+  var l1,l2,l3,l4,l5,l6,l7,l8,l9,l10=0
   
   //Measuring number of accessed attributes
-    l1 ::= test1(pdp).employedAttributes.size
-    l2 ::= test2(pdp).employedAttributes.size
-    l3 ::= test3(pdp).employedAttributes.size
-    l4 ::= test4(pdp).employedAttributes.size
-    l5 ::= test5(pdp).employedAttributes.size
-    l6 ::= test6(pdp).employedAttributes.size
-    l7 ::= test7(pdp).employedAttributes.size
-    l8 ::= test8(pdp).employedAttributes.size
-    l9 ::= test9(pdp).employedAttributes.size
-   l10 ::= test10(pdp).employedAttributes.size
+    l1 = test1(pdp).employedAttributes.size
+    l2 = test2(pdp).employedAttributes.size
+    l3 = test3(pdp).employedAttributes.size
+    l4 = test4(pdp).employedAttributes.size
+    l5 = test5(pdp).employedAttributes.size
+    l6 = test6(pdp).employedAttributes.size
+    l7 = test7(pdp).employedAttributes.size
+    l8 = test8(pdp).employedAttributes.size
+    l9 = test9(pdp).employedAttributes.size
+   l10 = test10(pdp).employedAttributes.size
 
   //Measuring evaluation time
-  for(i <- 1 to 1){
+  for(i <- 1 to 100){
     tNormal.time(test1(pdp))
     tNormal.time(test2(pdp))
     tNormal.time(test3(pdp))
@@ -48,8 +49,29 @@ object Experiment {
     tNormal.time(test9(pdp))
     tNormal.time(test10(pdp))
   }
-  println("mean: " + tNormal.mean)
-  //TODO code experiments here
+  
+  //write results
+  val file = new File("normalAccess.txt")
+  val bw = new BufferedWriter(new FileWriter(file))
+  bw.write(l1.toString + "\n")
+  bw.write(l2.toString + "\n")
+  bw.write(l3.toString + "\n")
+  bw.write(l4.toString + "\n")
+  bw.write(l5.toString + "\n")
+  bw.write(l6.toString + "\n")
+  bw.write(l7.toString + "\n")
+  bw.write(l8.toString + "\n")
+  bw.write(l9.toString + "\n")
+  bw.write(l10.toString + "\n")
+  bw.close()
+  
+  val file1 = new File("normalTime.txt")
+  val bw1 = new BufferedWriter(new FileWriter(file1))
+  for(t <- tNormal.timings)
+	  bw1.write(t + "\n")
+  bw1.close()
+  
+  //TODO convert and test
 }
   
   def test1(pdp : PDP) = pdp.evaluate("test1", "view", "doc123")

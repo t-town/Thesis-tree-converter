@@ -12,7 +12,7 @@ class MyAttributeFinderModule extends AttributeFinderModule {
   
   //TODO: andere attributen invullen?
   override protected def find(ctx: EvaluationCtx, cType: AttributeContainerType, name: String, aType: AttributeType, multiValued: Boolean): Option[ConcreteValue] = {
-    Thread.sleep(5)
+    Thread.sleep(2)
     cType match {
       case SUBJECT => name match {
         case "roles" => ctx.subjectId match {
