@@ -58,7 +58,7 @@ class TreeConverter(var root: Policy, val knownAttributes : Set[Attribute]) {
 	  for (p <- policy.subpolicies.reverse){
 	    var rule = p.asInstanceOf[Rule]
 	    var sentence = convertToSentence(rule.condition)
-	    println("conversion started")
+	    println("conversion started " + sentence)
 	    sentence = ConvertToDNF.convert(sentence)
 	    println("conversion complete")
 	    var condition = revertToCondition(sentence)
