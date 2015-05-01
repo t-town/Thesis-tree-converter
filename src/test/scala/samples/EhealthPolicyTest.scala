@@ -34,9 +34,9 @@ import stapl.core.pdp.PDP
 
 object EhealthPolicyTest {
   
-  import EhealthPolicy._
+  import TestExample._
   
-  val converter = new TreeConverter(naturalPolicy, Set.empty)
+  val converter = new TreeConverter(TestPol, Set.empty)
   converter.convertTree();
   val pdp:PDP = new PDP(converter.root)
   
@@ -316,7 +316,7 @@ object TestExample extends BasicPolicy with GeneralTemplates {
   subject.responsible_patients = ListAttribute(String)
 
   // The policy set for "view patient status".
-  val naturalPolicy = Policy("ehealth") := when (action.id === "view" & resource.type_ === "patientstatus") apply DenyOverrides to (    
+  val TestPol = Policy("ehealth") := when (action.id === "view" & resource.type_ === "patientstatus") apply DenyOverrides to (    
     // The consent policy.
     Policy("policy:1") := when ("medical_personnel" in subject.roles) apply PermitOverrides to (
         Rule("consent") := deny iff (subject.id in resource.owner_withdrawn_consents),
@@ -335,14 +335,6 @@ object TestExample extends BasicPolicy with GeneralTemplates {
       Rule("policy:4") := permit iff (((subject.department === "cardiology") | (subject.department === "elder_care") | (subject.department === "emergency"))
                                       & (subject.triggered_breaking_glass | resource.operator_triggered_emergency | resource.indicates_emergency)),
       
-      // For GPs: only permit if in consultation or treated in the last six months or primary physician or responsible in the system.
-      OnlyPermitIff("policyset:3")("gp" in subject.roles)(
-          (resource.owner_id === subject.current_patient_in_consultation)
-          | (resource.owner_id in subject.treated_in_last_six_months)
-          | (resource.owner_id in subject.primary_patients)
-          | (subject.id in resource.owner_responsible_physicians)
-      ),
-      
       // For cardiologists.
       Policy("policyset:4") := when (subject.department === "cardiology") apply PermitOverrides to (        
         // Permit for head physician.
@@ -358,11 +350,6 @@ object TestExample extends BasicPolicy with GeneralTemplates {
       OnlyPermitIff("policyset:5")(subject.department === "elder_care")(
           (resource.owner_id in subject.admitted_patients_in_care_unit)
           | (resource.owner_id in subject.treated_in_last_six_months)
-      ),
-      
-      // For physicians of emergency department: only permit if patient status is bad (or the above).
-      OnlyPermitIff("policyset:6")(subject.department === "emergency")(   
-          resource.patient_status === "bad"
       )
     ),
     
@@ -378,14 +365,7 @@ object TestExample extends BasicPolicy with GeneralTemplates {
       Rule("policy:16") := deny iff !(subject.location === "hospital"),
       
       // Nurses can only view the patient's status of the last five days.
-      Rule("policy:17") := deny iff !(environment.currentDateTime lteq (resource.created + 5.days)),
-      
-      // For nurses of cardiology department: they can only view the patient status of a patient 
-      // in their nurse unit for whom they are assigned responsible, up to three days after they were discharged.
-      OnlyPermitIff("policyset:8")(subject.department === "cardiology")(
-          (resource.owner_id in subject.admitted_patients_in_nurse_unit) 
-          	& (!resource.owner_discharged | (environment.currentDateTime lteq (resource.owner_discharged_dateTime + 3.days)))
-      )
+      Rule("policy:17") := deny iff !(environment.currentDateTime lteq (resource.created + 5.days))
     ),
     // For patients
     Policy("policyset:11") := when ("patient" in subject.roles) apply FirstApplicable to (      
@@ -396,7 +376,7 @@ object TestExample extends BasicPolicy with GeneralTemplates {
 	      // A patient can only view his own status.
 	      Rule("policy:24") := deny iff !(resource.owner_id === subject.id),
 	      
-	      Rule("policy:25") := deny
+	      Rule("policy:25") := permit
     )
   )
 }
