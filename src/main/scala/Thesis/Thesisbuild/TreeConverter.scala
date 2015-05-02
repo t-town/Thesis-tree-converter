@@ -452,8 +452,6 @@ class TreeConverter(var root: Policy, val knownAttributes : Set[Attribute]) {
 	}	
 	
 	def findCommon(c1 : Expression, c2: Expression, atts: Set[Attribute], op: String) : Expression = {
-	  println(c1)
-      println(c2)
 	  var common:Set[Expression] = findCommons(c1,c2,op)
 	  println("commons found: " + common)
 	  var result:Expression = AlwaysFalse
@@ -465,6 +463,7 @@ class TreeConverter(var root: Policy, val knownAttributes : Set[Attribute]) {
 	      result = c
 	    }
 	  }
+	  println(max)
 	  if(max >= 0)
 		  return result
       else
