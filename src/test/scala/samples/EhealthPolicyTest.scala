@@ -84,6 +84,7 @@ class EhealthPolicyTest extends AssertionsForJUnit {
         subject.triggered_breaking_glass -> false,
         subject.department -> "department-not-allowed",
         resource.type_ -> "patientstatus",
+        resource.operator_triggered_emergency -> false,
         resource.owner_withdrawn_consents -> List("subject1","subject2","subject3","maarten")).decision === 
           Deny)
   }
