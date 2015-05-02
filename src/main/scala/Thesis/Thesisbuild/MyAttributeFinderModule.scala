@@ -55,8 +55,8 @@ class MyAttributeFinderModule extends AttributeFinderModule {
         }
         case "type_" =>  Some("patientstatus")
         case "created" => Some(new LocalDateTime(2014, 6, 22, 14, 2, 1))
-        case "operator_triggered_emergency" => null //TODO
-        case "indicates_emergency" => null //TODO
+        case "operator_triggered_emergency" => Some(false)
+        case "indicates_emergency" => Some(false)
         case "owner_responsible_physicians" => null //TODO
         case "owner_discharged" => null //TODO
         case "owner_discharged_dateTime" => null //TODO

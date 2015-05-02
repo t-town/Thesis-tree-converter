@@ -31,6 +31,7 @@ import stapl.examples.policies.EhealthPolicy
 import stapl.templates.general.GeneralTemplates
 import stapl.core._
 import stapl.core.pdp.PDP
+import stapl.core.pdp.AttributeFinder
 
 object EhealthPolicyTest {
   
@@ -38,7 +39,9 @@ object EhealthPolicyTest {
   
   val converter = new TreeConverter(TestPol, Set.empty)
   converter.convertTree();
-  val pdp:PDP = new PDP(converter.root)
+  val atts = new AttributeFinder
+  atts += new MyAttributeFinderModule
+  val pdp:PDP = new PDP(converter.root,atts)
   
   @BeforeClass def setup() {
 
@@ -84,7 +87,6 @@ class EhealthPolicyTest extends AssertionsForJUnit {
         subject.triggered_breaking_glass -> false,
         subject.department -> "department-not-allowed",
         resource.type_ -> "patientstatus",
-        resource.operator_triggered_emergency -> false,
         resource.owner_withdrawn_consents -> List("subject1","subject2","subject3","maarten")).decision === 
           Deny)
   }
