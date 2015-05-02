@@ -390,6 +390,7 @@ class TreeConverter(var root: Policy, val knownAttributes : Set[Attribute]) {
 	****************************************************************************/
 	
 	def canBeSplit(policy : Policy,atts : Set[Attribute]):Boolean = {
+	  println("checking can be split" + policy)
 	  var common = findCommon(policy.subpolicies(0).asInstanceOf[Rule].condition,
 	      policy.subpolicies(1).asInstanceOf[Rule].condition,atts,"Or")
 	  return common != null
