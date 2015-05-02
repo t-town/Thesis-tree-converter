@@ -390,6 +390,7 @@ class TreeConverter(var root: Policy, val knownAttributes : Set[Attribute]) {
 	  println("checking can be split: " + policy)
 	  var common = findCommon(policy.subpolicies(0).asInstanceOf[Rule].condition,
 	      policy.subpolicies(1).asInstanceOf[Rule].condition,atts,"Or")
+	  println("canbesplit?: " + common)
 	  return common != null
 	  }
 	  
@@ -453,7 +454,6 @@ class TreeConverter(var root: Policy, val knownAttributes : Set[Attribute]) {
 	
 	def findCommon(c1 : Expression, c2: Expression, atts: Set[Attribute], op: String) : Expression = {
 	  var common:Set[Expression] = findCommons(c1,c2,op)
-	  println("commons found: " + common)
 	  var result:Expression = AlwaysFalse
 	  var max = -1
 	  for(c <- common) {
