@@ -53,14 +53,10 @@ class TreeConverter(var root: Policy, val knownAttributes : Set[Attribute]) {
 	def normalise(policy : Policy) : Policy = {
 	  var p = null
 	  var newsubs = List[AbstractPolicy]()
-	  println(policy.pca)
-	  println("size: " + policy.subpolicies.size)
 	  for (p <- policy.subpolicies.reverse){
 	    var rule = p.asInstanceOf[Rule]
 	    var sentence = convertToSentence(rule.condition)
-	    println("conversion started " + sentence)
 	    sentence = ConvertToDNF.convert(sentence)
-	    println("conversion complete")
 	    var condition = revertToCondition(sentence)
 	    val newRule = new Rule(rule.id)(rule.effect,condition,List[ObligationAction]())
 	    newRule.parent = Some(policy)
@@ -76,8 +72,11 @@ class TreeConverter(var root: Policy, val knownAttributes : Set[Attribute]) {
 	  var splitPol = policy
 	  var knownAtts = knownAttributes
 	  while(canBeSplit(splitPol,knownAtts)){
+	    println(splitPol)
 	    var tmp = splitPolicy(splitPol,knownAtts)
+	    println("created new policy" + tmp)
 	    knownAtts ++= getAttributes(splitPol.subpolicies.head)
+	    println("Finding new attributes")
 	    splitPol = tmp
 	  }
 	  ruleIndex = 0
