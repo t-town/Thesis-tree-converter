@@ -10,13 +10,17 @@ import stapl.core.pdp.RequestCtx
 
 object Experiment {
   
-  import stapl.examples.policies.EhealthPolicy._
   import ExperimentPolicy._
+  import samples.TestExample._
   import java.io._
   
   val finder = new AttributeFinder
   finder += new MyAttributeFinderModule
-  val pdp = new PDP(naturalPolicy , finder)
+  val pdp = new PDP(TestPol , finder)
+  
+  val converter = new TreeConverter(testPolcopy, Set.empty)
+  converter.convertTree();
+  val pdp2 = new PDP(converter.root, finder)
   
   def main(args: Array[String]) {
   val tNormal = new Timer()
@@ -24,7 +28,7 @@ object Experiment {
   
   var l1,l2,l3,l4,l5,l6,l7,l8,l9,l10=0
   
-  //Measuring number of accessed attributes
+  //Measuring number of accessed attributes before conversion
     l1 = test1(pdp).employedAttributes.size
     l2 = test2(pdp).employedAttributes.size
     l3 = test3(pdp).employedAttributes.size
@@ -36,7 +40,7 @@ object Experiment {
     l9 = test9(pdp).employedAttributes.size
    l10 = test10(pdp).employedAttributes.size
 
-  //Measuring evaluation time
+  //Measuring evaluation time before conversion
   for(i <- 1 to 100){
     tNormal.time(test1(pdp))
     tNormal.time(test2(pdp))
@@ -50,7 +54,7 @@ object Experiment {
     tNormal.time(test10(pdp))
   }
   
-  //write results
+  //write results before conversion
   val file = new File("normalAccess.txt")
   val bw = new BufferedWriter(new FileWriter(file))
   bw.write(l1.toString + "\n")
@@ -71,7 +75,52 @@ object Experiment {
 	  bw1.write(t + "\n")
   bw1.close()
   
-  //TODO convert and test
+  //Measuring number of accessed attributes after conversion
+    l1 = test1(pdp2).employedAttributes.size
+    l2 = test2(pdp2).employedAttributes.size
+    l3 = test3(pdp2).employedAttributes.size
+    l4 = test4(pdp2).employedAttributes.size
+    l5 = test5(pdp2).employedAttributes.size
+    l6 = test6(pdp2).employedAttributes.size
+    l7 = test7(pdp2).employedAttributes.size
+    l8 = test8(pdp2).employedAttributes.size
+    l9 = test9(pdp2).employedAttributes.size
+   l10 = test10(pdp2).employedAttributes.size
+   
+    //Measuring evaluation time after conversion
+  for(i <- 1 to 100){
+    tConvert.time(test1(pdp2))
+    tConvert.time(test2(pdp2))
+    tConvert.time(test3(pdp2))
+    tConvert.time(test4(pdp2))
+    tConvert.time(test5(pdp2))
+    tConvert.time(test6(pdp2))
+    tConvert.time(test7(pdp2))
+    tConvert.time(test8(pdp2))
+    tConvert.time(test9(pdp2))
+    tConvert.time(test10(pdp2))
+  }
+  
+   //write results before conversion
+  val file2 = new File("convertAccess.txt")
+  val bw2 = new BufferedWriter(new FileWriter(file2))
+  bw2.write(l1.toString + "\n")
+  bw2.write(l2.toString + "\n")
+  bw2.write(l3.toString + "\n")
+  bw2.write(l4.toString + "\n")
+  bw2.write(l5.toString + "\n")
+  bw2.write(l6.toString + "\n")
+  bw2.write(l7.toString + "\n")
+  bw2.write(l8.toString + "\n")
+  bw2.write(l9.toString + "\n")
+  bw2.write(l10.toString + "\n")
+  bw2.close()
+  
+  val file3 = new File("convertTime.txt")
+  val bw3 = new BufferedWriter(new FileWriter(file3))
+  for(t <- tConvert.timings)
+	  bw3.write(t + "\n")
+  bw3.close()
 }
   
   def test1(pdp : PDP) = pdp.evaluate("test1", "view", "doc123")
@@ -129,7 +178,7 @@ object ExperimentPolicy extends BasicPolicy with GeneralTemplates {
   subject.responsible_patients = ListAttribute(String)
 
   // The policy set for "view patient status".
-  val naturalCopyPolicy = Policy("ehealth") := when (action.id === "view" & resource.type_ === "patientstatus") apply DenyOverrides to (    
+  val testPolcopy = Policy("ehealth") := when (action.id === "view" & resource.type_ === "patientstatus") apply DenyOverrides to (    
     // The consent policy.
     Policy("policy:1") := when ("medical_personnel" in subject.roles) apply PermitOverrides to (
         Rule("consent") := deny iff (subject.id in resource.owner_withdrawn_consents),
@@ -148,14 +197,6 @@ object ExperimentPolicy extends BasicPolicy with GeneralTemplates {
       Rule("policy:4") := permit iff (((subject.department === "cardiology") | (subject.department === "elder_care") | (subject.department === "emergency"))
                                       & (subject.triggered_breaking_glass | resource.operator_triggered_emergency | resource.indicates_emergency)),
       
-      // For GPs: only permit if in consultation or treated in the last six months or primary physician or responsible in the system.
-      OnlyPermitIff("policyset:3")("gp" in subject.roles)(
-          (resource.owner_id === subject.current_patient_in_consultation)
-          | (resource.owner_id in subject.treated_in_last_six_months)
-          | (resource.owner_id in subject.primary_patients)
-          | (subject.id in resource.owner_responsible_physicians)
-      ),
-      
       // For cardiologists.
       Policy("policyset:4") := when (subject.department === "cardiology") apply PermitOverrides to (        
         // Permit for head physician.
@@ -171,11 +212,6 @@ object ExperimentPolicy extends BasicPolicy with GeneralTemplates {
       OnlyPermitIff("policyset:5")(subject.department === "elder_care")(
           (resource.owner_id in subject.admitted_patients_in_care_unit)
           | (resource.owner_id in subject.treated_in_last_six_months)
-      ),
-      
-      // For physicians of emergency department: only permit if patient status is bad (or the above).
-      OnlyPermitIff("policyset:6")(subject.department === "emergency")(   
-          resource.patient_status === "bad"
       )
     ),
     
@@ -193,14 +229,7 @@ object ExperimentPolicy extends BasicPolicy with GeneralTemplates {
       // Nurses can only view the patient's status of the last five days.
       Rule("policy:17") := deny iff !(environment.currentDateTime lteq (resource.created + 5.days)),
       
-      // For nurses of cardiology department: they can only view the patient status of a patient 
-      // in their nurse unit for whom they are assigned responsible, up to three days after they were discharged.
-      OnlyPermitIff("policyset:8")(subject.department === "cardiology")(
-          (resource.owner_id in subject.admitted_patients_in_nurse_unit) 
-          	& (!resource.owner_discharged | (environment.currentDateTime lteq (resource.owner_discharged_dateTime + 3.days)))
-      ),
-        
-      // For nurses of the elder care department.
+       // For nurses of the elder care department.
       Policy("policyset:9") := when (subject.department === "elder_care") apply DenyOverrides to (
         // Of the nurses of the elder care department, only nurses who have been allowed to use the PMS can access the PMS.
         Rule("policy:20") := deny iff !subject.allowed_to_access_pms,
