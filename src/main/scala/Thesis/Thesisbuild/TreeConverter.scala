@@ -78,7 +78,6 @@ class TreeConverter(var root: Policy, val knownAttributes : Set[Attribute]) {
 	  }
 	  ruleIndex = 0
 	  policyIndex = 0
-	  println("Expanding and")
 	  expandAnd(getLowestPolicies(policy),knownAtts)
 	  return policy
 	}
@@ -453,7 +452,6 @@ class TreeConverter(var root: Policy, val knownAttributes : Set[Attribute]) {
 	
 	def findCommon(c1 : Expression, c2: Expression, atts: Set[Attribute], op: String) : Expression = {
 	  var common:Set[Expression] = findCommons(c1,c2,op)
-	  println("size?: " + common.size)
 	  var result:Expression = AlwaysFalse
 	  var max = -1
 	  for(c <- common) {

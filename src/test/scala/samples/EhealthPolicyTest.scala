@@ -57,7 +57,7 @@ class EhealthPolicyTest extends AssertionsForJUnit {
   }
 
   @Test def testNotApplicableOtherAction() {
-    assert(pdp.evaluate("maarten", "an-action", "doc123") === Result(NotApplicable,List()))
+    assert(pdp.evaluate("maarten", "an-action", "doc123").decision === NotApplicable)
   }
 
   @Test def testDenyWithdrawnConsents() {
@@ -65,7 +65,8 @@ class EhealthPolicyTest extends AssertionsForJUnit {
         subject.roles -> List("medical_personnel"),
         subject.triggered_breaking_glass -> false,
         resource.type_ -> "patientstatus",
-        resource.owner_withdrawn_consents -> List("subject1","subject2","subject3","maarten")) === Result(Deny,List()))
+        resource.owner_withdrawn_consents -> List("subject1","subject2","subject3","maarten")).decision 
+        === Deny)
   }
 
   @Test def testDenyIncorrectMedicalPersonnel() {
@@ -73,7 +74,8 @@ class EhealthPolicyTest extends AssertionsForJUnit {
         subject.roles -> List("medical_personnel", "role-not-allowed"),
         subject.triggered_breaking_glass -> false,
         resource.type_ -> "patientstatus",
-        resource.owner_withdrawn_consents -> List("subject1","subject2","subject3","maarten")) === Result(Deny,List()))
+        resource.owner_withdrawn_consents -> List("subject1","subject2","subject3","maarten")).decision === 
+         Deny)
   }
 
   @Test def testPhysicianDepartment1() {
@@ -82,7 +84,8 @@ class EhealthPolicyTest extends AssertionsForJUnit {
         subject.triggered_breaking_glass -> false,
         subject.department -> "department-not-allowed",
         resource.type_ -> "patientstatus",
-        resource.owner_withdrawn_consents -> List("subject1","subject2","subject3","maarten")) === Result(Deny,List()))
+        resource.owner_withdrawn_consents -> List("subject1","subject2","subject3","maarten")).decision === 
+          Deny)
   }
 
   @Test def testPhysicianDepartment2() {
@@ -116,23 +119,24 @@ class EhealthPolicyTest extends AssertionsForJUnit {
   }
 
   @Test def testPermitPhysicianEmergency1() {
-    assert(pdp.evaluate("maarten", "view", "doc123",
+    val result = pdp.evaluate("maarten", "view", "doc123",
         subject.roles -> List("medical_personnel", "physician"),
         subject.triggered_breaking_glass -> true,
         subject.department -> "cardiology",
         resource.type_ -> "patientstatus",
-        resource.owner_withdrawn_consents -> List("subject1","subject2","subject3")) === 
-          Result(Permit,List()))
+        resource.owner_withdrawn_consents -> List("subject1","subject2","subject3"))
+    assert(result.decision === Permit)
   }
 
   @Test def testPermitPhysicianEmergency2() {        
-    assert(pdp.evaluate("maarten", "view", "doc123",
+    val result = pdp.evaluate("maarten", "view", "doc123",
         subject.roles -> List("medical_personnel", "physician"),
         subject.triggered_breaking_glass -> false,
         subject.department -> "cardiology",
         resource.type_ -> "patientstatus",
         resource.owner_withdrawn_consents -> List("subject1","subject2","subject3"),
-        resource.operator_triggered_emergency -> true) === Result(Permit,List()))
+        resource.operator_triggered_emergency -> true)
+    assert(result.decision === Permit)
   }
 
   @Test def testPermitPhysicianEmergency3() {
@@ -143,7 +147,7 @@ class EhealthPolicyTest extends AssertionsForJUnit {
         resource.type_ -> "patientstatus",
         resource.owner_withdrawn_consents -> List("subject1","subject2","subject3"),
         resource.operator_triggered_emergency -> false,
-        resource.indicates_emergency -> true) === Result(Permit,List()))
+        resource.indicates_emergency -> true).decision === Permit)
   }
 
   @Test def testOverrideWithdrawnConsents {
@@ -152,8 +156,8 @@ class EhealthPolicyTest extends AssertionsForJUnit {
         subject.triggered_breaking_glass -> true,
         subject.department -> "cardiology",
         resource.type_ -> "patientstatus",
-        resource.owner_withdrawn_consents -> List("subject1","subject2","subject3","maarten")) === 
-          Result(Permit,List()))
+        resource.owner_withdrawn_consents -> List("subject1","subject2","subject3","maarten"))
+        .decision === Permit)
   }
   
   @Test def testPermitNurseOfElderCareDepartment {
@@ -171,11 +175,11 @@ class EhealthPolicyTest extends AssertionsForJUnit {
         resource.owner_withdrawn_consents -> List("subject1"),
         resource.type_ -> "patientstatus",
         resource.created -> new LocalDateTime(2014, 6, 22, 14, 2, 1), // three days ago
-        environment.currentDateTime -> new LocalDateTime(2014, 6, 24, 14, 2, 1)) === Result(Permit,List()))
+        environment.currentDateTime -> new LocalDateTime(2014, 6, 24, 14, 2, 1)).decision === Permit)
   }
   
   @Test def testDenyNurseOfElderCareDepartmentNotAllowed {
-    assert(pdp.evaluate("maarten", "view", "doc123",
+    val result = pdp.evaluate("maarten", "view", "doc123",
         subject.roles -> List("medical_personnel", "nurse"),
         subject.triggered_breaking_glass -> false,
         subject.department -> "elder_care",
@@ -189,11 +193,12 @@ class EhealthPolicyTest extends AssertionsForJUnit {
         resource.owner_withdrawn_consents -> List("subject1"),
         resource.type_ -> "patientstatus",
         resource.created -> new LocalDateTime(2014, 6, 22, 14, 2, 1), // three days ago
-        environment.currentDateTime -> new LocalDateTime(2014, 6, 24, 14, 2, 1)) === Result(Deny,List()))
+        environment.currentDateTime -> new LocalDateTime(2014, 6, 24, 14, 2, 1))
+        assert(result.decision === Deny)
   }
   
   @Test def testDenyNurseOfElderCareDepartmentNotAtHospital {
-    assert(pdp.evaluate("maarten", "view", "doc123",
+    val result = pdp.evaluate("maarten", "view", "doc123",
         subject.roles -> List("medical_personnel", "nurse"),
         subject.triggered_breaking_glass -> false,
         subject.department -> "elder_care",
@@ -207,11 +212,12 @@ class EhealthPolicyTest extends AssertionsForJUnit {
         resource.owner_withdrawn_consents -> List("subject1"),
         resource.type_ -> "patientstatus",
         resource.created -> new LocalDateTime(2014, 6, 22, 14, 2, 1), // three days ago
-        environment.currentDateTime -> new LocalDateTime(2014, 6, 24, 14, 2, 1)) === Result(Deny,List()))
+        environment.currentDateTime -> new LocalDateTime(2014, 6, 24, 14, 2, 1))
+        assert(result.decision === Deny)
   }
   
   @Test def testDenyNurseOfElderCareDepartmentNotInNurseUnit {
-    assert(pdp.evaluate("maarten", "view", "doc123",
+    val result = pdp.evaluate("maarten", "view", "doc123",
         subject.roles -> List("medical_personnel", "nurse"),
         subject.triggered_breaking_glass -> false,
         subject.department -> "elder_care",
@@ -225,11 +231,12 @@ class EhealthPolicyTest extends AssertionsForJUnit {
         resource.owner_withdrawn_consents -> List("subject1"),
         resource.type_ -> "patientstatus",
         resource.created -> new LocalDateTime(2014, 6, 22, 14, 2, 1), // three days ago
-        environment.currentDateTime -> new LocalDateTime(2014, 6, 24, 14, 2, 1)) === Result(Deny,List()))
+        environment.currentDateTime -> new LocalDateTime(2014, 6, 24, 14, 2, 1))
+        assert(result.decision === Deny)
   }
   
   @Test def testDenyNurseOfElderCareDepartmentNotResponsible {
-    assert(pdp.evaluate("maarten", "view", "doc123",
+    val result = pdp.evaluate("maarten", "view", "doc123",
         subject.roles -> List("medical_personnel", "nurse"),
         subject.triggered_breaking_glass -> false,
         subject.department -> "elder_care",
@@ -243,11 +250,12 @@ class EhealthPolicyTest extends AssertionsForJUnit {
         resource.owner_withdrawn_consents -> List("subject1"),
         resource.type_ -> "patientstatus",
         resource.created -> new LocalDateTime(2014, 6, 22, 14, 2, 1), // three days ago
-        environment.currentDateTime -> new LocalDateTime(2014, 6, 24, 14, 2, 1)) === Result(Deny,List()))
+        environment.currentDateTime -> new LocalDateTime(2014, 6, 24, 14, 2, 1))
+        assert(result.decision === Deny)
   }
   
   @Test def testDenyNurseOfElderCareDepartmentNotOwner {
-    assert(pdp.evaluate("maarten", "view", "doc123",
+    val result = pdp.evaluate("maarten", "view", "doc123",
         subject.roles -> List("medical_personnel", "nurse"),
         subject.triggered_breaking_glass -> false,
         subject.department -> "elder_care",
@@ -261,11 +269,12 @@ class EhealthPolicyTest extends AssertionsForJUnit {
         resource.owner_withdrawn_consents -> List("subject1"),
         resource.type_ -> "patientstatus",
         resource.created -> new LocalDateTime(2014, 6, 22, 14, 2, 1), // three days ago
-        environment.currentDateTime -> new LocalDateTime(2014, 6, 24, 14, 2, 1)) === Result(Deny,List()))
+        environment.currentDateTime -> new LocalDateTime(2014, 6, 24, 14, 2, 1))
+        assert(result.decision === Deny)
   }
   
   @Test def testDenyNurseOfElderCareDepartmentTooLongAgo {
-    assert(pdp.evaluate("maarten", "view", "doc123",
+    val result = pdp.evaluate("maarten", "view", "doc123",
         subject.roles -> List("medical_personnel", "nurse"),
         subject.triggered_breaking_glass -> false,
         subject.department -> "elder_care",
@@ -279,7 +288,8 @@ class EhealthPolicyTest extends AssertionsForJUnit {
         resource.owner_withdrawn_consents -> List("subject1"),
         resource.type_ -> "patientstatus",
         resource.created -> new LocalDateTime(2014, 6, 1, 14, 2, 1), // X more than five days ago
-        environment.currentDateTime -> new LocalDateTime(2014, 6, 24, 14, 2, 1)) === Result(Deny,List()))
+        environment.currentDateTime -> new LocalDateTime(2014, 6, 24, 14, 2, 1))
+        assert(result.decision === Deny)
   }
 }
 
