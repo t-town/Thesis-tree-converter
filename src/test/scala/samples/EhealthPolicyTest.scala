@@ -375,7 +375,20 @@ object TestExample extends BasicPolicy with GeneralTemplates {
       Rule("policy:16") := deny iff !(subject.location === "hospital"),
       
       // Nurses can only view the patient's status of the last five days.
-      Rule("policy:17") := deny iff !(environment.currentDateTime lteq (resource.created + 5.days))
+      Rule("policy:17") := deny iff !(environment.currentDateTime lteq (resource.created + 5.days)),
+      
+       // For nurses of the elder care department.
+      Policy("policyset:9") := when (subject.department === "elder_care") apply DenyOverrides to (
+        // Of the nurses of the elder care department, only nurses who have been allowed to use the PMS can access the PMS.
+        Rule("policy:20") := deny iff !subject.allowed_to_access_pms,
+        
+        // Nurses of the elder care department can only view the patient status of a patient 
+        // who is currently admitted to their nurse unit and for whome they are assigned responsible.
+        OnlyPermitIff("policySet:10")(AlwaysTrue)(
+            (resource.owner_id in subject.admitted_patients_in_nurse_unit) 
+            	& (resource.owner_id in subject.responsible_patients)
+        )
+      )
     ),
     // For patients
     Policy("policyset:11") := when ("patient" in subject.roles) apply FirstApplicable to (      
