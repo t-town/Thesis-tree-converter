@@ -27,6 +27,8 @@ object Experiment {
   val tConvert = new Timer()
   
   var l1,l2,l3,l4,l5,l6,l7,l8,l9,l10=0
+  var lnormal, lconvert: List[Double] = List.empty
+  var devnormal, devconvert: List[Double] = List.empty
   
   //Measuring number of accessed attributes before conversion
     l1 = test1(pdp).employedAttributes.size
@@ -52,27 +54,31 @@ object Experiment {
     tNormal.time(test8(pdp))
     tNormal.time(test9(pdp))
     tNormal.time(test10(pdp))
+    lnormal ::= tNormal.mean
+    devnormal ::= tNormal.stdDev
+    tNormal.reset
   }
   
   //write results before conversion
   val file = new File("normalAccess.txt")
   val bw = new BufferedWriter(new FileWriter(file))
-  bw.write(l1.toString + "\n")
-  bw.write(l2.toString + "\n")
-  bw.write(l3.toString + "\n")
-  bw.write(l4.toString + "\n")
-  bw.write(l5.toString + "\n")
-  bw.write(l6.toString + "\n")
-  bw.write(l7.toString + "\n")
-  bw.write(l8.toString + "\n")
-  bw.write(l9.toString + "\n")
-  bw.write(l10.toString + "\n")
+  bw.write("test1 " + l1.toString + "\n")
+  bw.write("test2 " + l2.toString + "\n")
+  bw.write("test3 " + l3.toString + "\n")
+  bw.write("test4 " + l4.toString + "\n")
+  bw.write("test5 " + l5.toString + "\n")
+  bw.write("test6 " + l6.toString + "\n")
+  bw.write("test7 " + l7.toString + "\n")
+  bw.write("test8 " + l8.toString + "\n")
+  bw.write("test9 " + l9.toString + "\n")
+  bw.write("test10 " + l10.toString + "\n")
   bw.close()
   
   val file1 = new File("normalTime.txt")
   val bw1 = new BufferedWriter(new FileWriter(file1))
-  for(t <- tNormal.timings)
-	  bw1.write(t + "\n")
+  bw1.write("time standard deviation \n")
+  for(t <- 1 to lnormal.size)
+	  bw1.write(lnormal(t-1) + " " + devnormal(t-1) + "\n")
   bw1.close()
   
   //Measuring number of accessed attributes after conversion
@@ -99,27 +105,31 @@ object Experiment {
     tConvert.time(test8(pdp2))
     tConvert.time(test9(pdp2))
     tConvert.time(test10(pdp2))
+    lconvert ::= tConvert.mean
+    devconvert ::= tConvert.stdDev
+    tConvert.reset
   }
   
    //write results before conversion
   val file2 = new File("convertAccess.txt")
   val bw2 = new BufferedWriter(new FileWriter(file2))
-  bw2.write(l1.toString + "\n")
-  bw2.write(l2.toString + "\n")
-  bw2.write(l3.toString + "\n")
-  bw2.write(l4.toString + "\n")
-  bw2.write(l5.toString + "\n")
-  bw2.write(l6.toString + "\n")
-  bw2.write(l7.toString + "\n")
-  bw2.write(l8.toString + "\n")
-  bw2.write(l9.toString + "\n")
-  bw2.write(l10.toString + "\n")
+  bw2.write("test1 " + l1.toString + "\n")
+  bw2.write("test2 " + l2.toString + "\n")
+  bw2.write("test3 " + l3.toString + "\n")
+  bw2.write("test4 " + l4.toString + "\n")
+  bw2.write("test5 " + l5.toString + "\n")
+  bw2.write("test6 " + l6.toString + "\n")
+  bw2.write("test7 " + l7.toString + "\n")
+  bw2.write("test8 " + l8.toString + "\n")
+  bw2.write("test9 " + l9.toString + "\n")
+  bw2.write("test10 " + l10.toString + "\n")
   bw2.close()
   
   val file3 = new File("convertTime.txt")
   val bw3 = new BufferedWriter(new FileWriter(file3))
-  for(t <- tConvert.timings)
-	  bw3.write(t + "\n")
+  bw3.write("time standard deviation \n")
+  for(t <- 1 to lconvert.size)
+	  bw3.write(lconvert(t-1) + " " + devconvert(t-1) + "\n")
   bw3.close()
 }
   
