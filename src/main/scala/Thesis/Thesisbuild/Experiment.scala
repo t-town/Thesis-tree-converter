@@ -131,6 +131,12 @@ object Experiment {
   for(t <- 1 to lconvert.size)
 	  bw3.write(lconvert(t-1) + " " + devconvert(t-1) + "\n")
   bw3.close()
+  
+  val file4 = new File("accessTime.txt")
+  val bw4 = new BufferedWriter(new FileWriter(file4))
+  for(t <- 1 to lconvert.size)
+	  bw4.write(lnormal(t-1) + " " + lconvert(t-1) + "\n")
+  bw4.close()
 }
   
   def test1(pdp : PDP) = pdp.evaluate("test1", "view", "doc123")
