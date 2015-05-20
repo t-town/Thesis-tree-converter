@@ -118,7 +118,44 @@ object LittleReuse extends BasicPolicy with GeneralTemplates {
   
   import stapl.core.dsl._
   
+  environment.currentDateTime = SimpleAttribute(DateTime)
+  resource.type_ = SimpleAttribute(String) 
+  resource.owner_withdrawn_consents = ListAttribute(String)
+  resource.indicates_emergency = SimpleAttribute(Bool)
+  resource.owner_id = SimpleAttribute("owner:id", String)
+  subject.roles = ListAttribute(String)
+  subject.department = SimpleAttribute(String)
+  subject.primary_patients = ListAttribute(String)
+  subject.is_head_physician = SimpleAttribute(Bool)
+  subject.shift_start = SimpleAttribute(DateTime)
+  subject.shift_stop = SimpleAttribute(DateTime)
+  subject.location = SimpleAttribute(String) 
+  subject.allowed_to_access_pms = SimpleAttribute(Bool)
+  
   val test2 = Policy("littleReuse") := when(action.id === "view" & resource.type_ === "patientstatus") apply FirstApplicable to (
+     Policy("policy:1") := when("nurse" in subject.roles) apply PermitOverrides to (
+       Rule("rule:11") := deny iff (!(subject.location == "hospital")),
+       Rule("rule:12") := permit iff (subject.department == "emergency"),
+       Policy("policy:11") := when(subject.department == "radiology") apply FirstApplicable to (
+           Rule("rule:111") := permit iff ((environment.currentDateTime gteq subject.shift_start) & (environment.currentDateTime lteq subject.shift_stop)),
+           Rule("rule:112") := permit iff (resource.owner_id in subject.primary_patients),
+           Rule("rule:113") := deny
+       ),
+       Rule("rule:13") := deny
+     ),
+     Policy("policy:2") := when("physician" in subject.roles) apply DenyOverrides to (
+         Rule("rule:21") := permit iff (subject.is_head_physician),
+         Rule("rule:22") := permit iff (subject.allowed_to_access_pms),
+         Policy("policy:21") := when(subject.id in resource.owner_withdrawn_consent) apply PermitOverrides to (
+           Rule("rule:211") := permit iff (resource.indicates_emergency),
+           Rule("rule:212") := deny
+         ),
+         Rule("rule:23") := deny
+     ),
+     Rule("rule:3") := deny
+  )
+  
+  val test2Copy = Policy("littleReuse") := when(action.id === "view" & resource.type_ === "patientstatus") apply FirstApplicable to (
      Policy("policy:1") := when("nurse" in subject.roles) apply PermitOverrides to (
        Rule("rule:11") := deny iff (!(subject.location == "hospital")),
        Rule("rule:12") := permit iff (subject.department == "emergency"),
@@ -143,19 +180,66 @@ object LittleReuse extends BasicPolicy with GeneralTemplates {
 }
 
 object suchReuse extends BasicPolicy with GeneralTemplates {
-  //Policy
-	//Rule
-	//Policy
-		//Rule
-		//Rule
-		//Rule
-		//Rule
-	//Policy
-		//Rule
-		//Rule
-	//Policy
-		//Rule
-		//Rule
-		//OnlyPermitIff
+
+  import stapl.core.dsl._
+  
+  val test3= Policy("Policy1") := apply FirstApplicable to (
+      Policy("Policy2") := apply PermitOverrides to (
+        Rule("Rule21"),
+        Policy("Policy21") := apply PermitOverrides to ( 
+          Rule("Rule211"),
+          Rule("Rule212"),
+          Policy("Policy211") := apply PermitOverrides to ( 
+            Rule("Rule2111"),
+            Rule("Rule2112") := deny
+          ),
+          Rule("Rule213") := deny
+        ),
+        Rule("Rule22") := deny
+      ),
+      Policy("Policy3") := apply DenyOverrides to (
+        Rule("Rule31"),
+        Policy("Policy31") := apply firstApplicable to (
+          Policy("Policy311") := apply PermitOverrides to(
+            Rule("Rule3111"),    
+            Rule("Rule3112"),  
+            Rule("Rule3113") := deny
+          ),
+          Rule("Rule311"),
+          Policy("Policy312") := apply PermitOverrides to (
+            Rule("Rule3121"),    
+            Rule("Rule3122"),  
+            Rule("Rule3123") := deny    
+          ),
+          Rule("Rule312") := deny
+        ),
+        Rule("Rule32") := permit
+      ),
+      Policy("Policy4") := apply FirstApplicable to (
+        Rule("Rule41"),
+        Policy("Policy41") := apply PermitOverrides to (
+          Rule("Rule411"),
+          Rule("Rule412"),
+          Rule("Rule413") := deny
+        ),
+        Rule("Rule42"),
+        Rule("Rule43") := deny
+      ),
+      Policy("Policy5") := apply PermitOverrides to (
+        Rule("Rule51"),
+        Policy("Policy51") := apply DenyOverrides to (
+          Rule("Rule511"),
+          Rule("Rule512"),
+          Rule("Rule513") := permit
+        ),
+        Rule("Rule43") := deny    
+      ),
+      Policy("Policy6") := apply FirstApplicable to (
+          Rule("Rule61"),
+          Rule("Rule62") := permit    
+      ),
+      Rule("Rule1") := deny
+  )
+  
   
 }
