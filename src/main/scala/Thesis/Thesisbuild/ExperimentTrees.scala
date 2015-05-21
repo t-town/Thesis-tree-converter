@@ -133,7 +133,7 @@ object LittleReuse extends BasicPolicy with GeneralTemplates {
   subject.location = SimpleAttribute(String) 
   subject.allowed_to_access_pms = SimpleAttribute(Bool)
   
-  val test2 = Policy("littleReuse") := when(action.id === "view" & resource.type_ === "patientstatus") apply FirstApplicable to (
+  val tree2 = Policy("littleReuse") := when(action.id === "view" & resource.type_ === "patientstatus") apply FirstApplicable to (
      Policy("policy:1") := when("nurse" in subject.roles) apply PermitOverrides to (
        Rule("rule:11") := deny iff (!(subject.location == "hospital")),
        Rule("rule:12") := permit iff (subject.department == "emergency"),
@@ -156,7 +156,7 @@ object LittleReuse extends BasicPolicy with GeneralTemplates {
      Rule("rule:3") := deny
   )
   
-  val test2Copy = Policy("littleReuse") := when(action.id === "view" & resource.type_ === "patientstatus") apply FirstApplicable to (
+  val tree2Copy = Policy("littleReuse") := when(action.id === "view" & resource.type_ === "patientstatus") apply FirstApplicable to (
      Policy("policy:1") := when("nurse" in subject.roles) apply PermitOverrides to (
        Rule("rule:11") := deny iff (!(subject.location == "hospital")),
        Rule("rule:12") := permit iff (subject.department == "emergency"),
@@ -202,10 +202,10 @@ object suchReuse extends BasicPolicy with GeneralTemplates {
   subject.current_patient_in_consultation = SimpleAttribute(String)
   subject.treated_in_last_six_months = ListAttribute(String)
   
-  val test3= Policy("Policy1") := when (action.id === "view" & resource.type_ === "patientstatus") apply FirstApplicable to (
+  val tree3= Policy("Policy1") := when (action.id === "view" & resource.type_ === "patientstatus") apply FirstApplicable to (
       Policy("Policy2") := when ("nurse" in subject.roles) apply PermitOverrides to (
         Rule("Rule21") := permit iff ((subject.location == "hospital")|(subject.location == "home")),
-        Policy("Policy21") := when(resource.created == new LocalDateTime(2015, 6, 21, 9, 0, 0)) apply PermitOverrides to ( 
+        Policy("Policy21") := when(resource.created == environment.currentDateTime) apply PermitOverrides to ( 
           Rule("Rule211") := permit iff !(resource.patient_status == "in treatment"),
           Rule("Rule212") := permit iff ((environment.currentDateTime gteq subject.shift_start) & (environment.currentDateTime lteq subject.shift_stop)) ,
           Policy("Policy211") := when ((resource.indicates_emergency)&(subject.location == "hospital")) apply PermitOverrides to ( 
@@ -224,10 +224,10 @@ object suchReuse extends BasicPolicy with GeneralTemplates {
             Rule("Rule3112") := permit iff ("nurse" in subject.roles),  
             Rule("Rule3113") := deny
           ),
-          Rule("Rule311") := deny iff (resource.owner_discharged_dateTime gteq new LocalDateTime(2015, 6, 14, 9, 0, 0) ),
+          Rule("Rule311") := deny iff (resource.owner_discharged_dateTime gteq environment.currentDateTime - 5.days ),
           Policy("Policy312") := when (subject.is_head_physician) apply PermitOverrides to (
             Rule("Rule3121") := permit iff (resource.indicates_emergency),    
-            Rule("Rule3122") := permit iff (("nurse" in subject.roles)|(resource.created == new LocalDateTime(2015, 6, 21, 9, 0, 0))),  
+            Rule("Rule3122") := permit iff (("nurse" in subject.roles)|(resource.created == environment.currentDateTime)),  
             Rule("Rule3123") := deny    
           ),
           Rule("Rule312") := deny
@@ -245,7 +245,7 @@ object suchReuse extends BasicPolicy with GeneralTemplates {
         Rule("Rule43") := deny
       ),
       Policy("Policy5") := when (resource.owner_id in subject.current_patient_in_consultation) apply PermitOverrides to (
-        Rule("Rule51") := permit iff (resource.created == new LocalDateTime(2015,5,21,9,0,0)),
+        Rule("Rule51") := permit iff (resource.created == environment.currentDateTime),
         Policy("Policy51") := when(resource.patient_status == "in treatment") apply DenyOverrides to (
           Rule("Rule511") := deny iff (resource.owner_id in subject.treated_in_last_six_months),
           Rule("Rule512") := deny iff (resource.indicates_emergency),
@@ -260,10 +260,10 @@ object suchReuse extends BasicPolicy with GeneralTemplates {
       Rule("Rule1") := deny
   )
   
-   val test3copy= Policy("Policy1") := when (action.id === "view" & resource.type_ === "patientstatus") apply FirstApplicable to (
+   val tree3copy= Policy("Policy1") := when (action.id === "view" & resource.type_ === "patientstatus") apply FirstApplicable to (
       Policy("Policy2") := when ("nurse" in subject.roles) apply PermitOverrides to (
         Rule("Rule21") := permit iff ((subject.location == "hospital")|(subject.location == "home")),
-        Policy("Policy21") := when(resource.created == new LocalDateTime(2015, 6, 21, 9, 0, 0)) apply PermitOverrides to ( 
+        Policy("Policy21") := when(resource.created == environment.currentDateTime) apply PermitOverrides to ( 
           Rule("Rule211") := permit iff !(resource.patient_status == "in treatment"),
           Rule("Rule212") := permit iff ((environment.currentDateTime gteq subject.shift_start) & (environment.currentDateTime lteq subject.shift_stop)) ,
           Policy("Policy211") := when ((resource.indicates_emergency)&(subject.location == "hospital")) apply PermitOverrides to ( 
@@ -285,7 +285,7 @@ object suchReuse extends BasicPolicy with GeneralTemplates {
           Rule("Rule311") := deny iff (resource.owner_discharged_dateTime gteq new LocalDateTime(2015, 6, 14, 9, 0, 0) ),
           Policy("Policy312") := when (subject.is_head_physician) apply PermitOverrides to (
             Rule("Rule3121") := permit iff (resource.indicates_emergency),    
-            Rule("Rule3122") := permit iff (("nurse" in subject.roles)|(resource.created == new LocalDateTime(2015, 6, 21, 9, 0, 0))),  
+            Rule("Rule3122") := permit iff (("nurse" in subject.roles)|(resource.created == environment.currentDateTime)),  
             Rule("Rule3123") := deny    
           ),
           Rule("Rule312") := deny

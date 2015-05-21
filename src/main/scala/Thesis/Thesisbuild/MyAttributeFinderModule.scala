@@ -27,13 +27,13 @@ class MyAttributeFinderModule extends AttributeFinderModule {
           case "test2"|"test3"|"test4"|"test10" => Some("cardiology")
           case "test5"|"test6"|"test7"|"test8"|"test9" => Some("elder_care")
         }
-        case "current_patient_in_consultation" => null //TODO
-        case "treated_in_last_six_months" => null //TODO
-        case "primary_patients" => null //TODO
-        case "is_head_physician" => null //TODO
-        case "treated" => null //TODO
-        case "treated_by_team" => null //TODO
-        case "admitted_patients_in_care_unit" => null //TODO
+        case "current_patient_in_consultation" => null
+        case "treated_in_last_six_months" => null 
+        case "primary_patients" => null 
+        case "is_head_physician" => null
+        case "treated" => null 
+        case "treated_by_team" => null 
+        case "admitted_patients_in_care_unit" => null 
         case "shift_start" => Some(new LocalDateTime(2014, 6, 24, 9, 0, 0))
         case "shift_stop" => Some(new LocalDateTime(2014, 6, 24, 17, 0, 0))
         case "location" => ctx.subjectId match {
@@ -56,10 +56,10 @@ class MyAttributeFinderModule extends AttributeFinderModule {
         case "created" => Some(new LocalDateTime(2014, 6, 22, 14, 2, 1))
         case "operator_triggered_emergency" => Some(false)
         case "indicates_emergency" => Some(false)
-        case "owner_responsible_physicians" => null //TODO
-        case "owner_discharged" => null //TODO
-        case "owner_discharged_dateTime" => null //TODO
-        case "patient_status" => null //TODO
+        case "owner_responsible_physicians" => null
+        case "owner_discharged" => null
+        case "owner_discharged_dateTime" => null
+        case "patient_status" => null
         case _ => None
       }
       case ENVIRONMENT => name match {
@@ -77,7 +77,76 @@ class FinderModule2 extends AttributeFinderModule {
   
   override protected def find(ctx: EvaluationCtx, cType: AttributeContainerType, name: String, aType: AttributeType, multiValued: Boolean): Option[ConcreteValue] = {
     Thread.sleep(2)
-    return null //TODO
+    cType match {
+      case SUBJECT => name match {
+        case "roles" => ctx.subjectId match {
+          case "test1"|"test2"|"test3"|"test4"|"test5" => Some("nurse")
+          case _ => Some("physician")
+        }
+        case "triggered_breaking_glass" => null
+        case "department" => ctx.subjectId match {
+          case "test2" => Some("emergency")
+          case "test5" => Some("psychiatry")
+          case _ => Some("radiology")
+        }
+        case "current_patient_in_consultation" => null
+        case "treated_in_last_six_months" => null
+        case "primary_patients" => ctx.subjectId match {
+          case "test4" => Some(List("jos","owner"))
+          case _ => Some(List("owner"))
+        }
+        case "is_head_physician" => ctx.subjectId match{
+          case "test6" => Some(true)
+          case _ => Some(false)
+        }
+        case "treated" => null
+        case "treated_by_team" => null
+        case "admitted_patients_in_care_unit" => null
+        case "shift_start" => Some(new LocalDateTime(2015, 6, 21, 9, 0, 0))
+        case "shift_stop" => ctx.subjectId match{
+          case "test3" => Some(new LocalDateTime(2015, 6, 21, 12, 0, 0))
+          case _ => Some(new LocalDateTime(2015, 6, 21, 17, 0, 0))
+        }
+        case "location" => ctx.subjectId match {
+          case "test1" =>  Some("hospital")
+          case _ => Some("external")
+        }
+        case "admitted_patients_in_nurse_unit" => Some(List("patientX", "patientY"))
+        case "allowed_to_access_pms" => ctx.subjectId match {
+          case "test7" => Some(true)
+          case _ => Some(false)
+        }
+        case "responsible_patients" => Some(List("patientX", "patientZ"))
+        case _ => None
+      }
+      case RESOURCE => name match {
+        case "owner:id" => Some("jos")
+        case "owner_withdrawn_consents" => ctx.subjectId match{
+          case "test8"|"test9" => Some(true)
+          case _ => Some(false)
+        }
+        case "type_" =>  Some("patientstatus")
+        case "created" => null
+        case "operator_triggered_emergency" => Some(false)
+        case "indicates_emergency" => ctx.subjectId match {
+          case "test8" => Some(true)
+          case _ => Some(false)
+        }
+        case "owner_responsible_physicians" => null
+        case "owner_discharged" => null
+        case "owner_discharged_dateTime" => null
+        case "patient_status" => ctx.subjectId match {
+          case "test2" => Some("deceased")
+          case _ => Some("in treatment")
+        }
+        case _ => None
+      }
+      case ENVIRONMENT => name match {
+        case "currentDateTime" => Some(new LocalDateTime(2015, 6, 21, 13, 0, 0))
+        case _ => None
+      }
+      case _ => None
+    }
   }
 }
 
