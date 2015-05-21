@@ -2,6 +2,7 @@ package Thesis.Thesisbuild
 
 import stapl.templates.general.GeneralTemplates
 import stapl.core._
+import org.joda.time.LocalDateTime
 
 object ExperimentPolicy extends BasicPolicy with GeneralTemplates {
   
@@ -183,59 +184,77 @@ object suchReuse extends BasicPolicy with GeneralTemplates {
 
   import stapl.core.dsl._
   
-  val test3= Policy("Policy1") := apply FirstApplicable to (
-      Policy("Policy2") := apply PermitOverrides to (
-        Rule("Rule21"),
-        Policy("Policy21") := apply PermitOverrides to ( 
-          Rule("Rule211"),
-          Rule("Rule212"),
-          Policy("Policy211") := apply PermitOverrides to ( 
-            Rule("Rule2111"),
+  environment.currentDateTime = SimpleAttribute(DateTime)
+  resource.owner_id = SimpleAttribute("owner:id", String)
+  resource.created = SimpleAttribute(DateTime)
+  resource.type_ = SimpleAttribute(String)
+  resource.patient_status = SimpleAttribute(String)
+  resource.indicates_emergency = SimpleAttribute(Bool)
+  resource.owner_discharged = SimpleAttribute("owner:discharged", Bool)
+  resource.owner_discharged_dateTime = SimpleAttribute("owner:discharged_dateTime", DateTime)
+  subject.roles = ListAttribute(String)
+  subject.location = SimpleAttribute(String)
+  subject.shift_start = SimpleAttribute(DateTime)
+  subject.shift_stop = SimpleAttribute(DateTime)
+  subject.responsible_patients = ListAttribute(String)
+  subject.is_head_physician = SimpleAttribute(Bool)
+  subject.treated = ListAttribute(String)
+  subject.current_patient_in_consultation = SimpleAttribute(String)
+  subject.treated_in_last_six_months = ListAttribute(String)
+  
+  val test3= Policy("Policy1") := when (action.id === "view" & resource.type_ === "patientstatus") apply FirstApplicable to (
+      Policy("Policy2") := when ("nurse" in subject.roles) apply PermitOverrides to (
+        Rule("Rule21") := permit iff ((subject.location == "hospital")|(subject.location == "home")),
+        Policy("Policy21") := when(resource.created == new LocalDateTime(2015, 6, 21, 9, 0, 0)) apply PermitOverrides to ( 
+          Rule("Rule211") := permit iff !(resource.patient_status == "in treatment"),
+          Rule("Rule212") := permit iff ((environment.currentDateTime gteq subject.shift_start) & (environment.currentDateTime lteq subject.shift_stop)) ,
+          Policy("Policy211") := when ((resource.indicates_emergency)&(subject.location == "hospital")) apply PermitOverrides to ( 
+            Rule("Rule2111") := permit iff (resource.owner_id in subject.responsible_patients ),
             Rule("Rule2112") := deny
           ),
           Rule("Rule213") := deny
         ),
         Rule("Rule22") := deny
       ),
-      Policy("Policy3") := apply DenyOverrides to (
-        Rule("Rule31"),
-        Policy("Policy31") := apply firstApplicable to (
-          Policy("Policy311") := apply PermitOverrides to(
-            Rule("Rule3111"),    
-            Rule("Rule3112"),  
+      Policy("Policy3") := when ((environment.currentDateTime gteq subject.shift_start) & (environment.currentDateTime lteq subject.shift_stop)) apply DenyOverrides to (
+        Rule("Rule31") := deny iff resource.owner_discharged,
+        Policy("Policy31") := when (subject.location == "hospital") apply FirstApplicable to (
+          Policy("Policy311") := when (!(resource.patient_status == "in treatment"))apply PermitOverrides to(
+            Rule("Rule3111") := permit iff ("physician" in subject.roles),    
+            Rule("Rule3112") := permit iff ("nurse" in subject.roles),  
             Rule("Rule3113") := deny
           ),
-          Rule("Rule311"),
-          Policy("Policy312") := apply PermitOverrides to (
-            Rule("Rule3121"),    
-            Rule("Rule3122"),  
+          Rule("Rule311") := deny iff (resource.owner_discharged_dateTime gteq new LocalDateTime(2015, 6, 14, 9, 0, 0) ),
+          Policy("Policy312") := when (subject.is_head_physician) apply PermitOverrides to (
+            Rule("Rule3121") := permit iff (resource.indicates_emergency),    
+            Rule("Rule3122") := permit iff (("nurse" in subject.roles)|(resource.created == new LocalDateTime(2015, 6, 21, 9, 0, 0))),  
             Rule("Rule3123") := deny    
           ),
           Rule("Rule312") := deny
         ),
         Rule("Rule32") := permit
       ),
-      Policy("Policy4") := apply FirstApplicable to (
-        Rule("Rule41"),
-        Policy("Policy41") := apply PermitOverrides to (
-          Rule("Rule411"),
-          Rule("Rule412"),
+      Policy("Policy4") := when(resource.owner_discharged) apply FirstApplicable to (
+        Rule("Rule41") := deny iff ("nurse" in subject.roles),
+        Policy("Policy41") := when(resource.owner_id in subject.treated) apply PermitOverrides to (
+          Rule("Rule411") := permit iff (subject.location == "home"),
+          Rule("Rule412") := permit iff (subject.location == "hospital"),
           Rule("Rule413") := deny
         ),
-        Rule("Rule42"),
+        Rule("Rule42") := permit iff (resource.owner_id in subject.current_patient_in_consultation),
         Rule("Rule43") := deny
       ),
-      Policy("Policy5") := apply PermitOverrides to (
-        Rule("Rule51"),
-        Policy("Policy51") := apply DenyOverrides to (
-          Rule("Rule511"),
-          Rule("Rule512"),
+      Policy("Policy5") := when (resource.owner_id in subject.current_patient_in_consultation) apply PermitOverrides to (
+        Rule("Rule51") := permit iff (resource.created == new LocalDateTime(2015,5,21,9,0,0)),
+        Policy("Policy51") := when(resource.patient_status == "in treatment") apply DenyOverrides to (
+          Rule("Rule511") := deny iff (resource.owner_id in subject.treated_in_last_six_months),
+          Rule("Rule512") := deny iff (resource.indicates_emergency),
           Rule("Rule513") := permit
         ),
         Rule("Rule43") := deny    
       ),
-      Policy("Policy6") := apply FirstApplicable to (
-          Rule("Rule61"),
+      Policy("Policy6") := when("physician" in subject.roles) apply FirstApplicable to (
+          Rule("Rule61") := deny iff !((subject.is_head_physician)|(resource.indicates_emergency)),
           Rule("Rule62") := permit    
       ),
       Rule("Rule1") := deny
