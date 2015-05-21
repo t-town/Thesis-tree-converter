@@ -160,3 +160,21 @@ object Experiment {
   def test10(pdp : PDP) = pdp.evaluate("test10", "view", "doc123")
 
 }
+
+object Experiment2 {
+  
+  import LittleReuse._
+  
+  val finder = new AttributeFinder
+  finder += new FinderModule2
+  val pdp = new PDP(test2 , finder)
+}
+
+object Experiment3 {
+  
+  import suchReuse._
+  
+  val finder = new AttributeFinder
+  finder += new FinderModule3
+  val pdp = new PDP(test3 , finder)
+}

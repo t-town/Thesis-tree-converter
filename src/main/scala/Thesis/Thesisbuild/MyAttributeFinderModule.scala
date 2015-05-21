@@ -10,7 +10,6 @@ import org.joda.time.LocalDateTime
 
 class MyAttributeFinderModule extends AttributeFinderModule {
   
-  //TODO: andere attributen invullen?
   override protected def find(ctx: EvaluationCtx, cType: AttributeContainerType, name: String, aType: AttributeType, multiValued: Boolean): Option[ConcreteValue] = {
     Thread.sleep(2)
     cType match {
@@ -72,4 +71,20 @@ class MyAttributeFinderModule extends AttributeFinderModule {
   }
   
 
+}
+
+class FinderModule2 extends AttributeFinderModule {
+  
+  override protected def find(ctx: EvaluationCtx, cType: AttributeContainerType, name: String, aType: AttributeType, multiValued: Boolean): Option[ConcreteValue] = {
+    Thread.sleep(2)
+    return null //TODO
+  }
+}
+
+class FinderModule3 extends AttributeFinderModule {
+  
+  override protected def find(ctx: EvaluationCtx, cType: AttributeContainerType, name: String, aType: AttributeType, multiValued: Boolean): Option[ConcreteValue] = {
+    Thread.sleep(2)
+    return null //TODO
+  }
 }
