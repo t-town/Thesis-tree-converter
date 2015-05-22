@@ -80,13 +80,13 @@ class FinderModule2 extends AttributeFinderModule {
     cType match {
       case SUBJECT => name match {
         case "roles" => ctx.subjectId match {
-          case "test1"|"test2"|"test3"|"test4"|"test5" => Some("nurse")
-          case _ => Some("physician")
+          case "test1"|"test2"|"test3"|"test4"|"test5" => Some(List("nurse"))
+          case _ => Some(List("physician"))
         }
         case "triggered_breaking_glass" => null
         case "department" => ctx.subjectId match {
           case "test2" => Some("emergency")
-          case "test5" => Some("psychiatry")
+          case "test1"|"test5" => Some("psychiatry")
           case _ => Some("radiology")
         }
         case "current_patient_in_consultation" => null
@@ -104,12 +104,12 @@ class FinderModule2 extends AttributeFinderModule {
         case "admitted_patients_in_care_unit" => null
         case "shift_start" => Some(new LocalDateTime(2015, 6, 21, 9, 0, 0))
         case "shift_stop" => ctx.subjectId match{
-          case "test3" => Some(new LocalDateTime(2015, 6, 21, 12, 0, 0))
-          case _ => Some(new LocalDateTime(2015, 6, 21, 17, 0, 0))
+          case "test3" => Some(new LocalDateTime(2015, 6, 21, 17, 0, 0))
+          case _ => Some(new LocalDateTime(2015, 6, 21, 12, 0, 0))
         }
         case "location" => ctx.subjectId match {
-          case "test1" =>  Some("hospital")
-          case _ => Some("external")
+          case "test1" =>  Some("external")
+          case _ => Some("hospital")
         }
         case "admitted_patients_in_nurse_unit" => Some(List("patientX", "patientY"))
         case "allowed_to_access_pms" => ctx.subjectId match {
@@ -122,8 +122,9 @@ class FinderModule2 extends AttributeFinderModule {
       case RESOURCE => name match {
         case "owner:id" => Some("jos")
         case "owner_withdrawn_consents" => ctx.subjectId match{
-          case "test8"|"test9" => Some(true)
-          case _ => Some(false)
+          case "test8" => Some(List("test8","owner"))
+          case "test9" => Some(List("test9","owner"))
+          case _ => Some(List("owner"))
         }
         case "type_" =>  Some("patientstatus")
         case "created" => null

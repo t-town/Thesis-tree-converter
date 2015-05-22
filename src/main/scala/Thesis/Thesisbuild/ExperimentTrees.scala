@@ -135,19 +135,19 @@ object LittleReuse extends BasicPolicy with GeneralTemplates {
   
   val tree2 = Policy("littleReuse") := when(action.id === "view" & resource.type_ === "patientstatus") apply FirstApplicable to (
      Policy("policy:1") := when("nurse" in subject.roles) apply PermitOverrides to (
-       Rule("rule:11") := deny iff (!(subject.location == "hospital")),
-       Rule("rule:12") := permit iff (subject.department == "emergency"),
-       Policy("policy:11") := when(subject.department == "radiology") apply FirstApplicable to (
+       Rule("rule:11") := deny iff (!(subject.location === "hospital")),
+       Rule("rule:12") := permit iff (subject.department === "emergency"),
+       Policy("policy:11") := when(subject.department === "radiology") apply FirstApplicable to (
            Rule("rule:111") := permit iff ((environment.currentDateTime gteq subject.shift_start) & (environment.currentDateTime lteq subject.shift_stop)),
            Rule("rule:112") := permit iff (resource.owner_id in subject.primary_patients),
            Rule("rule:113") := deny
        ),
        Rule("rule:13") := deny
      ),
-     Policy("policy:2") := when("physician" in subject.roles) apply DenyOverrides to (
+     Policy("policy:2") := when("physician" in subject.roles) apply PermitOverrides to (
          Rule("rule:21") := permit iff (subject.is_head_physician),
          Rule("rule:22") := permit iff (subject.allowed_to_access_pms),
-         Policy("policy:21") := when(subject.id in resource.owner_withdrawn_consent) apply PermitOverrides to (
+         Policy("policy:21") := when(subject.id in resource.owner_withdrawn_consents) apply PermitOverrides to (
            Rule("rule:211") := permit iff (resource.indicates_emergency),
            Rule("rule:212") := deny
          ),
@@ -158,9 +158,9 @@ object LittleReuse extends BasicPolicy with GeneralTemplates {
   
   val tree2Copy = Policy("littleReuse") := when(action.id === "view" & resource.type_ === "patientstatus") apply FirstApplicable to (
      Policy("policy:1") := when("nurse" in subject.roles) apply PermitOverrides to (
-       Rule("rule:11") := deny iff (!(subject.location == "hospital")),
-       Rule("rule:12") := permit iff (subject.department == "emergency"),
-       Policy("policy:11") := when(subject.department == "radiology") apply FirstApplicable to (
+       Rule("rule:11") := deny iff (!(subject.location === "hospital")),
+       Rule("rule:12") := permit iff (subject.department === "emergency"),
+       Policy("policy:11") := when(subject.department === "radiology") apply FirstApplicable to (
            Rule("rule:111") := permit iff ((environment.currentDateTime gteq subject.shift_start) & (environment.currentDateTime lteq subject.shift_stop)),
            Rule("rule:112") := permit iff (resource.owner_id in subject.primary_patients),
            Rule("rule:113") := deny
@@ -170,7 +170,7 @@ object LittleReuse extends BasicPolicy with GeneralTemplates {
      Policy("policy:2") := when("physician" in subject.roles) apply DenyOverrides to (
          Rule("rule:21") := permit iff (subject.is_head_physician),
          Rule("rule:22") := permit iff (subject.allowed_to_access_pms),
-         Policy("policy:21") := when(subject.id in resource.owner_withdrawn_consent) apply PermitOverrides to (
+         Policy("policy:21") := when(subject.id in resource.owner_withdrawn_consents) apply PermitOverrides to (
            Rule("rule:211") := permit iff (resource.indicates_emergency),
            Rule("rule:212") := deny
          ),
