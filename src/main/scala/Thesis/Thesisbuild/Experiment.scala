@@ -10,11 +10,12 @@ import stapl.core.pdp.RequestCtx
 import java.io.File
 import java.io.BufferedWriter
 import java.io.FileWriter
+import samples.TestExample
 
 object Experiment {
   
   import ExperimentPolicy._
-  import samples.TestExample._
+  import TestExample._
   import java.io._
   
   val finder = new AttributeFinder
