@@ -167,7 +167,7 @@ object LittleReuse extends BasicPolicy with GeneralTemplates {
        ),
        Rule("rule:13") := deny
      ),
-     Policy("policy:2") := when("physician" in subject.roles) apply DenyOverrides to (
+     Policy("policy:2") := when("physician" in subject.roles) apply PermitOverrides to (
          Rule("rule:21") := permit iff (subject.is_head_physician),
          Rule("rule:22") := permit iff (subject.allowed_to_access_pms),
          Policy("policy:21") := when(subject.id in resource.owner_withdrawn_consents) apply PermitOverrides to (
@@ -204,11 +204,11 @@ object suchReuse extends BasicPolicy with GeneralTemplates {
   
   val tree3= Policy("Policy1") := when (action.id === "view" & resource.type_ === "patientstatus") apply FirstApplicable to (
       Policy("Policy2") := when ("nurse" in subject.roles) apply PermitOverrides to (
-        Rule("Rule21") := permit iff ((subject.location == "hospital")|(subject.location == "home")),
-        Policy("Policy21") := when(resource.created == environment.currentDateTime) apply PermitOverrides to ( 
-          Rule("Rule211") := permit iff !(resource.patient_status == "in treatment"),
+        Rule("Rule21") := permit iff ((subject.location === "hospital")|(subject.location === "home")),
+        Policy("Policy21") := when(resource.created === environment.currentDateTime) apply PermitOverrides to ( 
+          Rule("Rule211") := permit iff !(resource.patient_status === "in treatment"),
           Rule("Rule212") := permit iff ((environment.currentDateTime gteq subject.shift_start) & (environment.currentDateTime lteq subject.shift_stop)) ,
-          Policy("Policy211") := when ((resource.indicates_emergency)&(subject.location == "hospital")) apply PermitOverrides to ( 
+          Policy("Policy211") := when ((resource.indicates_emergency)&(subject.location === "hospital")) apply PermitOverrides to ( 
             Rule("Rule2111") := permit iff (resource.owner_id in subject.responsible_patients ),
             Rule("Rule2112") := deny
           ),
@@ -218,8 +218,8 @@ object suchReuse extends BasicPolicy with GeneralTemplates {
       ),
       Policy("Policy3") := when ((environment.currentDateTime gteq subject.shift_start) & (environment.currentDateTime lteq subject.shift_stop)) apply DenyOverrides to (
         Rule("Rule31") := deny iff resource.owner_discharged,
-        Policy("Policy31") := when (subject.location == "hospital") apply FirstApplicable to (
-          Policy("Policy311") := when (!(resource.patient_status == "in treatment"))apply PermitOverrides to(
+        Policy("Policy31") := when (subject.location === "hospital") apply FirstApplicable to (
+          Policy("Policy311") := when (!(resource.patient_status === "in treatment"))apply PermitOverrides to(
             Rule("Rule3111") := permit iff ("physician" in subject.roles),    
             Rule("Rule3112") := permit iff ("nurse" in subject.roles),  
             Rule("Rule3113") := deny
@@ -227,46 +227,23 @@ object suchReuse extends BasicPolicy with GeneralTemplates {
           Rule("Rule311") := deny iff (resource.owner_discharged_dateTime gteq environment.currentDateTime - 5.days ),
           Policy("Policy312") := when (subject.is_head_physician) apply PermitOverrides to (
             Rule("Rule3121") := permit iff (resource.indicates_emergency),    
-            Rule("Rule3122") := permit iff (("nurse" in subject.roles)|(resource.created == environment.currentDateTime)),  
+            Rule("Rule3122") := permit iff (("nurse" in subject.roles)|(resource.created === environment.currentDateTime)),  
             Rule("Rule3123") := deny    
           ),
           Rule("Rule312") := deny
         ),
         Rule("Rule32") := permit
       ),
-      Policy("Policy4") := when(resource.owner_discharged) apply FirstApplicable to (
-        Rule("Rule41") := deny iff ("nurse" in subject.roles),
-        Policy("Policy41") := when(resource.owner_id in subject.treated) apply PermitOverrides to (
-          Rule("Rule411") := permit iff (subject.location == "home"),
-          Rule("Rule412") := permit iff (subject.location == "hospital"),
-          Rule("Rule413") := deny
-        ),
-        Rule("Rule42") := permit iff (resource.owner_id in subject.current_patient_in_consultation),
-        Rule("Rule43") := deny
-      ),
-      Policy("Policy5") := when (resource.owner_id in subject.current_patient_in_consultation) apply PermitOverrides to (
-        Rule("Rule51") := permit iff (resource.created == environment.currentDateTime),
-        Policy("Policy51") := when(resource.patient_status == "in treatment") apply DenyOverrides to (
-          Rule("Rule511") := deny iff (resource.owner_id in subject.treated_in_last_six_months),
-          Rule("Rule512") := deny iff (resource.indicates_emergency),
-          Rule("Rule513") := permit
-        ),
-        Rule("Rule43") := deny    
-      ),
-      Policy("Policy6") := when("physician" in subject.roles) apply FirstApplicable to (
-          Rule("Rule61") := deny iff !((subject.is_head_physician)|(resource.indicates_emergency)),
-          Rule("Rule62") := permit    
-      ),
       Rule("Rule1") := deny
   )
   
    val tree3copy= Policy("Policy1") := when (action.id === "view" & resource.type_ === "patientstatus") apply FirstApplicable to (
       Policy("Policy2") := when ("nurse" in subject.roles) apply PermitOverrides to (
-        Rule("Rule21") := permit iff ((subject.location == "hospital")|(subject.location == "home")),
-        Policy("Policy21") := when(resource.created == environment.currentDateTime) apply PermitOverrides to ( 
-          Rule("Rule211") := permit iff !(resource.patient_status == "in treatment"),
+        Rule("Rule21") := permit iff ((subject.location === "hospital")|(subject.location === "home")),
+        Policy("Policy21") := when(resource.created === environment.currentDateTime) apply PermitOverrides to ( 
+          Rule("Rule211") := permit iff !(resource.patient_status === "in treatment"),
           Rule("Rule212") := permit iff ((environment.currentDateTime gteq subject.shift_start) & (environment.currentDateTime lteq subject.shift_stop)) ,
-          Policy("Policy211") := when ((resource.indicates_emergency)&(subject.location == "hospital")) apply PermitOverrides to ( 
+          Policy("Policy211") := when ((resource.indicates_emergency)&(subject.location === "hospital")) apply PermitOverrides to ( 
             Rule("Rule2111") := permit iff (resource.owner_id in subject.responsible_patients ),
             Rule("Rule2112") := deny
           ),
@@ -276,47 +253,23 @@ object suchReuse extends BasicPolicy with GeneralTemplates {
       ),
       Policy("Policy3") := when ((environment.currentDateTime gteq subject.shift_start) & (environment.currentDateTime lteq subject.shift_stop)) apply DenyOverrides to (
         Rule("Rule31") := deny iff resource.owner_discharged,
-        Policy("Policy31") := when (subject.location == "hospital") apply FirstApplicable to (
-          Policy("Policy311") := when (!(resource.patient_status == "in treatment"))apply PermitOverrides to(
+        Policy("Policy31") := when (subject.location === "hospital") apply FirstApplicable to (
+          Policy("Policy311") := when (!(resource.patient_status === "in treatment"))apply PermitOverrides to(
             Rule("Rule3111") := permit iff ("physician" in subject.roles),    
             Rule("Rule3112") := permit iff ("nurse" in subject.roles),  
             Rule("Rule3113") := deny
           ),
-          Rule("Rule311") := deny iff (resource.owner_discharged_dateTime gteq new LocalDateTime(2015, 6, 14, 9, 0, 0) ),
+          Rule("Rule311") := deny iff (resource.owner_discharged_dateTime gteq environment.currentDateTime - 5.days ),
           Policy("Policy312") := when (subject.is_head_physician) apply PermitOverrides to (
             Rule("Rule3121") := permit iff (resource.indicates_emergency),    
-            Rule("Rule3122") := permit iff (("nurse" in subject.roles)|(resource.created == environment.currentDateTime)),  
+            Rule("Rule3122") := permit iff (("nurse" in subject.roles)|(resource.created === environment.currentDateTime)),  
             Rule("Rule3123") := deny    
           ),
           Rule("Rule312") := deny
         ),
         Rule("Rule32") := permit
       ),
-      Policy("Policy4") := when(resource.owner_discharged) apply FirstApplicable to (
-        Rule("Rule41") := deny iff ("nurse" in subject.roles),
-        Policy("Policy41") := when(resource.owner_id in subject.treated) apply PermitOverrides to (
-          Rule("Rule411") := permit iff (subject.location == "home"),
-          Rule("Rule412") := permit iff (subject.location == "hospital"),
-          Rule("Rule413") := deny
-        ),
-        Rule("Rule42") := permit iff (resource.owner_id in subject.current_patient_in_consultation),
-        Rule("Rule43") := deny
-      ),
-      Policy("Policy5") := when (resource.owner_id in subject.current_patient_in_consultation) apply PermitOverrides to (
-        Rule("Rule51") := permit iff (resource.created == new LocalDateTime(2015,5,21,9,0,0)),
-        Policy("Policy51") := when(resource.patient_status == "in treatment") apply DenyOverrides to (
-          Rule("Rule511") := deny iff (resource.owner_id in subject.treated_in_last_six_months),
-          Rule("Rule512") := deny iff (resource.indicates_emergency),
-          Rule("Rule513") := permit
-        ),
-        Rule("Rule43") := deny    
-      ),
-      Policy("Policy6") := when("physician" in subject.roles) apply FirstApplicable to (
-          Rule("Rule61") := deny iff !((subject.is_head_physician)|(resource.indicates_emergency)),
-          Rule("Rule62") := permit    
-      ),
       Rule("Rule1") := deny
   )
-  
   
 }

@@ -86,7 +86,7 @@ class FinderModule2 extends AttributeFinderModule {
         case "triggered_breaking_glass" => null
         case "department" => ctx.subjectId match {
           case "test2" => Some("emergency")
-          case "test1"|"test5" => Some("psychiatry")
+          case "test1"|"test5"|"test6"|"test7"|"test8" => Some("psychiatry")
           case _ => Some("radiology")
         }
         case "current_patient_in_consultation" => null
@@ -155,6 +155,73 @@ class FinderModule3 extends AttributeFinderModule {
   
   override protected def find(ctx: EvaluationCtx, cType: AttributeContainerType, name: String, aType: AttributeType, multiValued: Boolean): Option[ConcreteValue] = {
     Thread.sleep(2)
-    return null //TODO
+    cType match {
+      case SUBJECT => name match {
+        
+        case "roles" => ctx.subjectId match {
+          case "test1"|"test6"|"test8"|"test9"|"test10" => Some(List("nurse"))
+          case _ => Some(List("physician"))
+        }
+        
+        case "location" => ctx.subjectId match{
+          case "test2"|"test3"|"test4"|"test6"|"test7"|"test9"|"test10" => Some("hospital")
+          case _ => Some("external")
+        }
+        
+        case "shift_start" => Some(new LocalDateTime(2015, 6, 21, 9, 0, 0))
+        
+        case "shift_stop" => ctx.subjectId match{
+          case "test2"|"test3"|"test4"|"test5"|"test7"|"test8"|"test9" => Some(new LocalDateTime(2015, 6, 21, 17, 0, 0))
+          case _ => Some(new LocalDateTime(2015, 6, 21, 12, 0, 0))
+        }
+        
+        case "is_head_physician" => ctx.subjectId match{
+          case "test4"|"test7" => Some(true)
+          case _ => Some(false)
+        }
+        
+        case "responsible_patients" => ctx.subjectId match {
+          case "test6" => Some(List("jos","patientX"))
+          case _ => Some(List("patientX"))
+        }
+        
+      }
+      case RESOURCE => name match {
+        
+        case "type_" =>  Some("patientstatus")
+        
+        case "created" => ctx.subjectId match {
+          case "test1"|"test3"|"test4"|"test6"|"test8" => Some(new LocalDateTime(2015,6,21,13,0,0))
+          case "test10" => Some(new LocalDateTime(2015,6,22,13,0,0))
+        }
+        
+        case "patient_status" => ctx.subjectId match {
+          case "test1"|"test2"|"test9" => Some("deceased")
+          case _ => Some("in treatment")
+        }
+        
+        case "owner:discharged" => ctx.subjectId match {
+          case "test5" => Some(true)
+          case _ => Some(false)
+        }
+        
+        case "owner:discharged_dateTime" => ctx.subjectId match {
+          case "test3" => Some(new LocalDateTime(2015, 6, 18, 13, 0, 0))
+          case _ => Some(new LocalDateTime(2015, 6, 10, 13, 0, 0))
+        }
+        
+        case "indicates_emergency" => ctx.subjectId match {
+          case "test6"|"test7" => Some(true)   
+          case _ => Some(false)
+        }
+        
+        case "owner:id" => Some("jos")
+        
+      }
+      case ENVIRONMENT => name match {
+        case "currentDateTime" => Some(new LocalDateTime(2015, 6, 21, 13, 0, 0))
+      }
+      case _ => None
+    }
   }
 }

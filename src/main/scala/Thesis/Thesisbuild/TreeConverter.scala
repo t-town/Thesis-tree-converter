@@ -10,7 +10,7 @@ import aima.core.logic.propositional.parsing.ast.PropositionSymbol
 import aima.core.logic.propositional.visitors.ConvertToCNF
 import aima.core.logic.propositional.inference.DPLLSatisfiable
 
-class TreeConverter(var root: Policy, val knownAttributes : Set[Attribute]) {
+class TreeConverter(var root: Policy, val knownAttributes : Set[Attribute] = Set.empty) {
   
   def convertTree() = {
     var s1 = reduce(root)

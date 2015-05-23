@@ -3,11 +3,16 @@ import stapl.core.pdp._
 
 object TestTrees {
 
-  import LittleReuse._
+  import stapl.core._
+  import suchReuse._
   
   val finder = new AttributeFinder
-  finder += new FinderModule2
-  val pdp = new PDP(tree2 , finder)
+  finder += new FinderModule3
+  val pdp = new PDP(tree3 , finder)
+  
+  //val converter = new TreeConverter(tree3copy)
+  //converter.convertTree();
+  //val pdp2 = new PDP(converter.root, finder)
   
   def main(args: Array[String]) {
   println("test1 " + test1(pdp).decision)
