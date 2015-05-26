@@ -11,7 +11,7 @@ import java.io.File
 import java.io.BufferedWriter
 import java.io.FileWriter
 
-object Experiment {
+object Experiment1 {
   
   import ExperimentPolicy._
   import java.io._
