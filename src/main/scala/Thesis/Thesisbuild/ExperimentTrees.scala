@@ -351,3 +351,203 @@ object suchReuse extends BasicPolicy with GeneralTemplates {
   )
   
 }
+
+object complexityTest extends BasicPolicy with GeneralTemplates{
+  
+  import stapl.core.dsl._
+  
+  resource.type_ = SimpleAttribute(String)
+  resource.indicates_emergency = SimpleAttribute(Bool)
+  resource.owner_discharged = SimpleAttribute("owner:discharged", Bool)
+  resource.owner_id = SimpleAttribute("owner:id", String)
+  resource.patient_status = SimpleAttribute(String)
+  subject.roles = ListAttribute(String)
+  subject.location = SimpleAttribute(String)
+  subject.department = SimpleAttribute(String)
+  subject.allowed_to_access_pms = SimpleAttribute(Bool)
+  subject.responsible_patients = ListAttribute(String)
+  subject.treated = ListAttribute(String)
+  subject.current_patient_in_consultation = SimpleAttribute(String)
+  subject.treated_in_last_six_months = ListAttribute(String)
+  
+  val comp1= Policy("Policy1") := when (action.id === "view" & resource.type_ === "patientstatus") apply FirstApplicable to (
+       Rule("Rule1") := permit iff ("physician" in subject.roles),
+       Rule("Rule2") := deny iff (subject.location === "home")
+      )
+  
+  val comp2= Policy("Policy10") := when (action.id === "view" & resource.type_ === "patientstatus") apply FirstApplicable to (
+      Policy("Policy20") := when("nurse" in subject.roles) apply PermitOverrides to(
+       Rule("Rule1") := permit iff ("physician" in subject.roles),
+       Rule("Rule2") := deny iff (subject.location === "home")
+      ),
+      Policy("Policy21") := when ("physician" in subject.roles) apply DenyOverrides to(
+       Rule("Rule3") := deny iff (subject.allowed_to_access_pms),
+       Rule("Rule4") := permit
+      )
+     )
+  
+   val comp3= Policy("Policy10") := when (action.id === "view" & resource.type_ === "patientstatus") apply FirstApplicable to (
+      Policy("Policy20") := when("nurse" in subject.roles) apply PermitOverrides to(
+          Policy("Policy30") := when(!subject.allowed_to_access_pms) apply FirstApplicable to(
+              Rule("Rule5") := deny iff (subject.department === "emergency"),
+              Rule("Rule6") := permit
+          ),
+          Policy("Policy31") := when(subject.allowed_to_access_pms) apply DenyOverrides to (
+              Rule("Rule1") := permit iff ("physician" in subject.roles),
+              Rule("Rule2") := deny iff (subject.location === "home")
+          )
+      ),
+      Policy("Policy21") := when ("physician" in subject.roles) apply DenyOverrides to(
+          Policy("Policy32") := when(subject.location === "hospital") apply PermitOverrides to (
+        	  Rule("Rule7") := permit iff (subject.is_head_physician),
+        	  Rule("Rule8") := deny
+          ),
+          Policy("Policy33") := apply DenyOverrides to (
+              Rule("Rule3") := deny iff (subject.allowed_to_access_pms),
+              Rule("Rule4") := permit
+          )
+      )
+     )
+  
+  val comp4= Policy("Policy10") := when (action.id === "view" & resource.type_ === "patientstatus") apply FirstApplicable to (
+      Policy("Policy20") := when("nurse" in subject.roles) apply PermitOverrides to(
+          Policy("Policy30") := when(!subject.allowed_to_access_pms) apply FirstApplicable to(
+              Policy("Policy40") := when(resource.owner_discharged) apply PermitOverrides to(
+            	Rule("Rule5") := deny iff (subject.department === "emergency"),
+                Rule("Rule6") := permit
+              ),
+             Policy("Policy41") := when(resource.indicated_emergency) apply FirstApplicable to(
+                Rule("Rule9") := permit iff (subject.department === "cardiology"),
+                Rule("Rule10") := deny iff (subject.department === "radiology")
+             )
+          ),
+          Policy("Policy31") := when(subject.allowed_to_access_pms) apply DenyOverrides to (
+        		  Policy("Policy42") := when(resource.indicates_emergency) apply FirstApplicable to (
+                    Rule("Rule1") := permit iff ("physician" in subject.roles),
+                    Rule("Rule2") := deny iff (subject.location === "home")
+                  ),
+                  Policy("Policy43") := when(!(resource.indicates_emergency)) apply DenyOverrides to(
+                    Rule("Rule11") := deny iff (subject.location == "transit"),
+                    Rule("Rule12") := permit
+                  )
+          )
+      ),
+      Policy("Policy21") := when ("physician" in subject.roles) apply DenyOverrides to(
+          Policy("Policy32") := when(subject.location === "hospital") apply PermitOverrides to (
+        		  Policy("Policy44") := when(resource.indicates_emergency) apply FirstApplicable to(
+        		      Rule("Rule13") := deny iff (resource.owner_discharged),
+        		      Rule("Rule14") := permit
+        		  ),
+        		  Policy("Policy45") := when(!(resource.indicates_emergency)) apply DenyOverrides to(
+        		      Rule("Rule7") := permit iff (subject.is_head_physician),
+        		      Rule("Rule8") := deny
+        		  )
+          ),
+          Policy("Policy33") := apply DenyOverrides to (
+              Policy("Policy46") := when(resource.indicates_emergency) apply FirstApplicable to(
+            	  Rule("Rule15") := deny iff (resource.owner_discharged),
+            	  Rule("Rule16") := permit
+              ),
+              Policy("Policy47") := when(!(resource.indicates_emergency)) apply DenyOverrides to(
+                  Rule("Rule3") := deny iff (subject.allowed_to_access_pms),
+                  Rule("Rule4") := permit
+              )
+          )
+      )
+     )
+  
+  val comp5= Policy("Policy10") := when (action.id === "view" & resource.type_ === "patientstatus") apply FirstApplicable to (
+      Policy("Policy20") := when("nurse" in subject.roles) apply PermitOverrides to(
+          Policy("Policy30") := when(!subject.allowed_to_access_pms) apply FirstApplicable to(
+              Policy("Policy40") := when(resource.owner_discharged) apply PermitOverrides to(
+                  Policy("Policy50") := when(resource.owner_id in subject.treated_in_last_six_months) apply DenyOverrides to (
+                	  Rule("Rule17") := deny iff (resource.owner_id === subject.current_patient_in_consultation),
+                	  Rule("Rule18") := permit
+                  ),
+                  Policy("Policy51") := when (resource.owner_id in subject.treated) apply FirstApplicable to(
+                      Rule("Rule5") := deny iff (subject.department === "emergency"),
+                      Rule("Rule6") := permit
+                  )
+              ),
+             Policy("Policy41") := when(resource.indicated_emergency) apply FirstApplicable to(
+                 Policy("Policy52") := when(resource.owner_id in subject.treated) apply PermitOverrides to (
+                     Rule("Rule19") := deny iff (subject.department == "cancer ward"),
+                     Rule("Rule20") := permit
+                 ),
+                 Policy("Policy53") := when (resource.owner_id in subject.treated_in_last_six_months) apply DenyOverrides to(
+                     Rule("Rule9") := permit iff (subject.department === "cardiology"),
+                     Rule("Rule10") := deny iff (subject.department === "radiology")
+                 )
+             )
+          ),
+          Policy("Policy31") := when(subject.allowed_to_access_pms) apply DenyOverrides to (
+        		  Policy("Policy42") := when(resource.indicates_emergency) apply FirstApplicable to (
+        		      Policy("Policy54") := when (resource.owner_id in subject.treated_in_last_six_months) apply FirstApplicable to(
+        		    	 Rule("Rule21") := permit iff ("ambulancier" in subject.roles),
+        		    	 Rule("Rule22") := deny
+        		      ),
+        		      Policy("Policy55") := apply DenyOverrides to (
+        		         Rule("Rule1") := permit iff ("physician" in subject.roles),
+        		         Rule("Rule2") := deny iff (subject.location === "home")
+        		      )
+                  ),
+                  Policy("Policy43") := when(!(resource.indicates_emergency)) apply DenyOverrides to(
+                      Policy("Policy56") := when("ambulancier" in subject.roles) apply FirstApplicable to(
+                    	  Rule("Rule23") := permit iff (resource.owner_id === subject.current_patient_in_consultation),
+                    	  Rule("Rule24") := deny
+                      ),
+                      Policy("Policy57") := when (resource.owner_id in subject.treated_in_last_six_months) apply FirstApplicable to(
+                          Rule("Rule11") := deny iff (subject.location == "transit"),
+                          Rule("Rule12") := permit
+                      )
+                  )
+          )
+      ),
+      Policy("Policy21") := when ("physician" in subject.roles) apply DenyOverrides to(
+          Policy("Policy32") := when(subject.location === "hospital") apply PermitOverrides to (
+        		  Policy("Policy44") := when(resource.indicates_emergency) apply FirstApplicable to(
+        		      Policy("Policy58") := when("ambulancier" in subject.roles) apply FirstApplicable to(
+                    	  Rule("Rule23") := permit iff (resource.owner_id === subject.current_patient_in_consultation),
+                    	  Rule("Rule24") := deny
+                      ),
+        		      Policy("Policy59") := when("reception" in subject.roles) apply PermitOverrides to(
+        		          Rule("Rule13") := deny iff (resource.owner_discharged),
+        		          Rule("Rule14") := permit
+        		      )
+        		  ),
+        		  Policy("Policy45") := when(!(resource.indicates_emergency)) apply DenyOverrides to(
+        		      Policy("Policy510") := when(resource.owner_id in subject.treated_in_last_six_months) apply DenyOverrides to (
+        		    		  Rule("Rule25") := deny iff (resource.owner_id === subject.current_patient_in_consultation),
+        		    		  Rule("Rule26") := permit
+        		      ),
+        		      Policy("Policy511") := apply FirstApplicable to(
+        		         Rule("Rule7") := permit iff (subject.is_head_physician),
+        		         Rule("Rule8") := deny 
+        		      )
+        		  )
+          ),
+          Policy("Policy33") := apply DenyOverrides to (
+              Policy("Policy46") := when(resource.indicates_emergency) apply FirstApplicable to(
+                  Policy("Policy512") := when (resource.owner_id in subject.treated_in_last_six_months) apply FirstApplicable to(
+        		    	 Rule("Rule27") := permit iff ("ambulancier" in subject.roles),
+        		    	 Rule("Rule28") := deny
+        		  ),
+        		  Policy("Policy513") := when(resource.id in subject.treated) apply DenyOverrides to(
+        		      Rule("Rule15") := deny iff (resource.owner_discharged),
+        		      Rule("Rule16") := permit
+        		  )
+              ),
+              Policy("Policy47") := when(!(resource.indicates_emergency)) apply DenyOverrides to(
+                  Policy("Policy514") := when(!(resource.indicates_emergency)) apply DenyOverrides to(
+                    	  Rule("Rule23") := permit iff (resource.owner_id === subject.current_patient_in_consultation),
+                    	  Rule("Rule24") := deny
+                  ),
+                  Policy("Policy515") := when(!(resource.owner_id === subject.current_patient)) apply FirstApplicable to(
+                      Rule("Rule3") := deny iff (subject.allowed_to_access_pms),
+                      Rule("Rule4") := permit
+                  )
+              )
+          )
+      )
+     )
+}
