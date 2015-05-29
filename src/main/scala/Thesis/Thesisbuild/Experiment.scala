@@ -481,7 +481,7 @@ object Experiment4 {
     timer.time(converter2.convertTree)
     timer.time(converter3.convertTree)
     timer.time(converter4.convertTree)
-    timer.time(converter5.convertTree)
+    //timer.time(converter5.convertTree)
     
     val file = new File("complexityTimes.txt")
     val bw = new BufferedWriter(new FileWriter(file))
