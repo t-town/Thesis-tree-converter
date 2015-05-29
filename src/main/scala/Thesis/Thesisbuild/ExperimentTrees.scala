@@ -417,7 +417,7 @@ object complexityTest extends BasicPolicy with GeneralTemplates{
             	Rule("Rule5") := deny iff (subject.department === "emergency"),
                 Rule("Rule6") := permit
               ),
-             Policy("Policy41") := when(resource.indicated_emergency) apply FirstApplicable to(
+             Policy("Policy41") := when(resource.indicates_emergency) apply FirstApplicable to(
                 Rule("Rule9") := permit iff (subject.department === "cardiology"),
                 Rule("Rule10") := deny iff (subject.department === "radiology")
              )
@@ -470,7 +470,7 @@ object complexityTest extends BasicPolicy with GeneralTemplates{
                       Rule("Rule6") := permit
                   )
               ),
-             Policy("Policy41") := when(resource.indicated_emergency) apply FirstApplicable to(
+             Policy("Policy41") := when(resource.indicates_emergency) apply FirstApplicable to(
                  Policy("Policy52") := when(resource.owner_id in subject.treated) apply PermitOverrides to (
                      Rule("Rule19") := deny iff (subject.department == "cancer ward"),
                      Rule("Rule20") := permit
@@ -543,7 +543,7 @@ object complexityTest extends BasicPolicy with GeneralTemplates{
                     	  Rule("Rule23") := permit iff (resource.owner_id === subject.current_patient_in_consultation),
                     	  Rule("Rule24") := deny
                   ),
-                  Policy("Policy515") := when(!(resource.owner_id === subject.current_patient)) apply FirstApplicable to(
+                  Policy("Policy515") := when(!(resource.owner_id === subject.current_patient_in_consultation)) apply FirstApplicable to(
                       Rule("Rule3") := deny iff (subject.allowed_to_access_pms),
                       Rule("Rule4") := permit
                   )
