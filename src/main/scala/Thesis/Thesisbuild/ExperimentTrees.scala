@@ -369,6 +369,7 @@ object complexityTest extends BasicPolicy with GeneralTemplates{
   subject.treated = ListAttribute(String)
   subject.current_patient_in_consultation = SimpleAttribute(String)
   subject.treated_in_last_six_months = ListAttribute(String)
+  subject.is_head_physician = SimpleAttribute(Bool)
   
   val comp1= Policy("Policy1") := when (action.id === "view" & resource.type_ === "patientstatus") apply FirstApplicable to (
        Rule("Rule1") := permit iff ("physician" in subject.roles),
