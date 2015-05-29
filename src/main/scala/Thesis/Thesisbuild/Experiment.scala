@@ -462,3 +462,32 @@ object Experiment3 {
   bw4.close()
   }
 }
+
+object Experiment4 {
+  
+  import complexityTest._
+  
+  val converter1 = new TreeConverter(comp1)
+  val converter2 = new TreeConverter(comp2)
+  val converter3 = new TreeConverter(comp3)
+  val converter4 = new TreeConverter(comp4)
+  val converter5 = new TreeConverter(comp5)
+  
+  def main(args: Array[String]) {
+  
+    val timer = new Timer
+    
+    timer.time(converter1.convertTree)
+    timer.time(converter2.convertTree)
+    timer.time(converter3.convertTree)
+    timer.time(converter4.convertTree)
+    timer.time(converter5.convertTree)
+    
+    val file = new File("complexityTimes.txt")
+    val bw = new BufferedWriter(new FileWriter(file))
+    for(t <- timer.timings)
+	  bw.write(t + "\n")
+    bw.close()
+ }
+  
+}
