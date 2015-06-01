@@ -1,15 +1,27 @@
-package Thesis.Thesisbuild
+package Thesis.Thesisbuild.Experiment
 
 import stapl.core._
-import stapl.templates.general.GeneralTemplates
 import stapl.performance.Timer
 import stapl.core.pdp.PDP
-import org.joda.time.LocalDateTime
 import stapl.core.pdp.AttributeFinder
-import stapl.core.pdp.RequestCtx
 import java.io.File
 import java.io.BufferedWriter
 import java.io.FileWriter
+import ExperimentPolicy.TestPol
+import ExperimentPolicy.testPolcopy
+import LittleReuse.tree2
+import LittleReuse.tree2Copy
+import Thesis.Thesisbuild.FinderModule2
+import Thesis.Thesisbuild.FinderModule3
+import Thesis.Thesisbuild.MyAttributeFinderModule
+import Thesis.Thesisbuild.TreeConverter
+import complexityTest.comp1
+import complexityTest.comp2
+import complexityTest.comp3
+import complexityTest.comp4
+import complexityTest.comp5
+import suchReuse.tree3
+import suchReuse.tree3copy
 
 object Experiment1 {
   

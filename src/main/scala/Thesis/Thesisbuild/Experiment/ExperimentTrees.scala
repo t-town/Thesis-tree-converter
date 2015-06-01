@@ -1,8 +1,16 @@
-package Thesis.Thesisbuild
+package Thesis.Thesisbuild.Experiment
 
 import stapl.templates.general.GeneralTemplates
 import stapl.core._
-import org.joda.time.LocalDateTime
+import stapl.core.dsl.Policy
+import stapl.core.dsl.Rule
+import stapl.core.dsl.apply
+import stapl.core.dsl.deny
+import stapl.core.dsl.log
+import stapl.core.dsl.obligationAction2ObligationActionWithOn
+import stapl.core.dsl.permit
+import stapl.core.dsl.to
+import stapl.core.dsl.when
 
 object ExperimentPolicy extends BasicPolicy with GeneralTemplates {
   

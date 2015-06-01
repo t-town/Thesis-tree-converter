@@ -1,5 +1,6 @@
 package Thesis.Thesisbuild
 import stapl.core.pdp._
+import Thesis.Thesisbuild.Experiment.complexityTest
 
 object TestTrees {
 
