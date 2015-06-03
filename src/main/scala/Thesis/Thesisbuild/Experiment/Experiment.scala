@@ -11,10 +11,6 @@ import ExperimentPolicy.TestPol
 import ExperimentPolicy.testPolcopy
 import LittleReuse.tree2
 import LittleReuse.tree2Copy
-import Thesis.Thesisbuild.FinderModule2
-import Thesis.Thesisbuild.FinderModule3
-import Thesis.Thesisbuild.MyAttributeFinderModule
-import Thesis.Thesisbuild.TreeConverter
 import complexityTest.comp1
 import complexityTest.comp2
 import complexityTest.comp3

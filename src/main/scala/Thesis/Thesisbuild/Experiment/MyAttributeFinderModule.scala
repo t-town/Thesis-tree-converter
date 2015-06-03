@@ -1,4 +1,4 @@
-package Thesis.Thesisbuild
+package Thesis.Thesisbuild.Experiment
 
 import stapl.core.pdp.AttributeFinderModule
 import stapl.core.AttributeContainerType

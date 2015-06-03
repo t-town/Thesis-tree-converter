@@ -1,13 +1,11 @@
-package Thesis.Thesisbuild
+package Thesis.Thesisbuild.Experiment
 
 import stapl.core._
 import aima.core.logic.propositional.parsing.ast.Sentence
 import aima.core.logic.propositional.visitors.ConvertToDNF
 import aima.core.logic.propositional.parsing.ast.ComplexSentence
 import aima.core.logic.propositional.parsing.ast.Connective
-import aima.core.logic.propositional.parsing.ast.AtomicSentence
 import aima.core.logic.propositional.parsing.ast.PropositionSymbol
-import aima.core.logic.propositional.visitors.ConvertToCNF
 import aima.core.logic.propositional.inference.DPLLSatisfiable
 
 class TreeConverter(var root: Policy, val knownAttributes : Set[Attribute] = Set.empty) {

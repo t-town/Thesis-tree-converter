@@ -4,7 +4,7 @@ import org.junit._
 import Assert._
 import stapl.core._
 import stapl.templates.general.GeneralTemplates
-import Thesis.Thesisbuild.TreeConverter
+import Thesis.Thesisbuild.Experiment.TreeConverter
 import stapl.core.pdp.PDP
 import stapl.core.pdp.AttributeFinder
 import org.joda.time.LocalDateTime

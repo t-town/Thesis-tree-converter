@@ -25,8 +25,8 @@ import org.junit.Test
 import org.junit.Assert._
 import org.scalatest.junit.AssertionsForJUnit
 import org.joda.time.LocalDateTime
-import Thesis.Thesisbuild.TreeConverter
-import Thesis.Thesisbuild.MyAttributeFinderModule
+import Thesis.Thesisbuild.Experiment.TreeConverter
+import Thesis.Thesisbuild.Experiment.MyAttributeFinderModule
 import stapl.examples.policies.EhealthPolicy
 import stapl.templates.general.GeneralTemplates
 import stapl.core._
