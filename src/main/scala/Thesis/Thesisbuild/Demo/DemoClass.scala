@@ -6,6 +6,8 @@ import stapl.core.pdp.AttributeFinderModule
 import stapl.core.pdp.EvaluationCtx
 import stapl.core.pdp.AttributeFinder
 import stapl.core.pdp.PDP
+import Thesis.Thesisbuild.Experiment.TreeConverter
+import stapl.performance.Timer
 
 object Demo {
   
@@ -15,10 +17,30 @@ object Demo {
   finder += new DemoAttFinder
   val pdp = new PDP(demotree , finder)
   
+  val converter = new TreeConverter(demotreeCopy)
+  converter.convertTree();
+  val pdp2 = new PDP(converter.root, finder)
+  
   def main(args: Array[String]) {
-    //TODO demo
-    val result = pdp.evaluate("UserX","view","demo.txt")
-    println(result)
+    val tNormal = new Timer()
+    val tConvert = new Timer()
+    
+    for(i <- 1 to 100){
+      tNormal.time(pdp.evaluate("UserX","view","demo.txt"))
+    }
+    
+    for(i <- 1 to 100){
+      tConvert.time(pdp2.evaluate("UserX","view","demo.txt"))
+    }
+    
+    println("======Originele boom======")
+    println("Evaluatietijd: " + tNormal.mean)
+    println("Aantal attributen: " + pdp.evaluate("UserX","view","demo.txt").employedAttributes.size) 
+    println()
+    println("======Getransformeerde boom======")
+    println("Evaluatietijd: " + tConvert.mean)
+    println("Aantal attributen: " + pdp2.evaluate("UserX","view","demo.txt").employedAttributes.size) 
+    
   }
   
 }
@@ -32,6 +54,16 @@ object DemoTree extends BasicPolicy with GeneralTemplates {
   resource.type_ = SimpleAttribute(String)
   
   val demotree = 
+    Policy("P1") := when (subject.id in environment.werknemer_ids) apply PermitOverrides to (
+      Policy("P2") := when("HR" in subject.rollen) apply FirstApplicable to(
+       Rule("R1") := permit iff (resource.type_ === "HR_bestand"),
+       Rule("R2") := deny
+      ),
+      Rule("R3") := permit iff ("IT" in subject.rollen),
+      Rule("R4") := deny
+    )
+  
+  val demotreeCopy = 
     Policy("P1") := when (subject.id in environment.werknemer_ids) apply PermitOverrides to (
       Policy("P2") := when("HR" in subject.rollen) apply FirstApplicable to(
        Rule("R1") := permit iff (resource.type_ === "HR_bestand"),
