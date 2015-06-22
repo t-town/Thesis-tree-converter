@@ -25,22 +25,21 @@ object Demo {
     val tNormal = new Timer()
     val tConvert = new Timer()
     
-    for(i <- 1 to 100){
+    for(i <- 1 to 200){
       tNormal.time(pdp.evaluate("UserX","view","demo.txt"))
     }
     
-    for(i <- 1 to 100){
+    for(i <- 1 to 200){
       tConvert.time(pdp2.evaluate("UserX","view","demo.txt"))
     }
     
     println("======Originele boom======")
-    println("Evaluatietijd: " + tNormal.mean)
-    println("Aantal attributen: " + pdp.evaluate("UserX","view","demo.txt").employedAttributes.size) 
+    println("Evaluatietijd: " + tNormal.mean + " ms")
+    println("Aantal attributen: " + pdp.evaluate("UserX","view","demo.txt").employedAttributes.size)
     println()
     println("======Getransformeerde boom======")
-    println("Evaluatietijd: " + tConvert.mean)
+    println("Evaluatietijd: " + tConvert.mean + " ms")
     println("Aantal attributen: " + pdp2.evaluate("UserX","view","demo.txt").employedAttributes.size) 
-    
   }
   
 }
