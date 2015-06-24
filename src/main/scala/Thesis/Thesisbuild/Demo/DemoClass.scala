@@ -37,9 +37,41 @@ object Demo {
     println("Evaluatietijd: " + tNormal.mean + " ms")
     println("Aantal attributen: " + pdp.evaluate("UserX","view","demo.txt").employedAttributes.size)
     println()
+    printTree(demotree)
+    println()
     println("======Getransformeerde boom======")
     println("Evaluatietijd: " + tConvert.mean + " ms")
-    println("Aantal attributen: " + pdp2.evaluate("UserX","view","demo.txt").employedAttributes.size) 
+    println("Aantal attributen: " + pdp2.evaluate("UserX","view","demo.txt").employedAttributes.size)
+    println()
+    printTree(converter.root)
+  }
+  
+  def printTree(p:Policy):Unit = {
+    printTree(p,0)
+  }
+  
+  def printTree(a:AbstractPolicy,space:Int):Unit = a match {
+    	case p:Policy => printPolicy(p,space)
+    	case r:Rule => printRule(r,space)
+  }
+  
+  def printPolicy(p:Policy,space:Int) = {
+    printSpace(space)
+    print("Policy "+p.id+ ": when " + p.target + " apply " + p.pca + " to \n")
+    for(c <- p.subpolicies)
+      printTree(c,space+1)
+  }
+  
+  def printRule(r:Rule,space:Int) = {
+    printSpace(space)
+    print("Rule "+r.id+ ": " + r.effect + " iff " + r.condition + "\n")
+  }
+  
+  def printSpace(space:Int):Unit = {
+    if(space>0){
+      print("|")
+      printSpace(space-1)
+    }
   }
   
 }
