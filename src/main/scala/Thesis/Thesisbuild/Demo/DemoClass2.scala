@@ -9,17 +9,15 @@ import stapl.core.pdp.PDP
 import Thesis.Thesisbuild.Experiment.TreeConverter
 import stapl.performance.Timer
 
-object Demo {
+object Demo2 {
   
-  import DemoTree._
+  import DemoTree2._
   
   val finder = new AttributeFinder
-  finder += new DemoAttFinder
-  val pdp = new PDP(demotree , finder)
+  finder += new DemoAttFinder2
+  val pdp = new PDP(demotree2 , finder)
   
-  val converter = new TreeConverter(demotreeCopy)
-  converter.convertTree();
-  val pdp2 = new PDP(converter.root, finder)
+  val pdp2 = new PDP(demotree2alt, finder)
   
   def main(args: Array[String]) {
     val tNormal = new Timer()
@@ -37,13 +35,13 @@ object Demo {
     println("Evaluatietijd: " + tNormal.mean + " ms")
     println("Aantal attributen: " + pdp.evaluate("UserX","view","demo.txt").employedAttributes.size)
     println()
-    printTree(demotree)
+    printTree(demotree2)
     println()
     println("======Getransformeerde boom======")
     println("Evaluatietijd: " + tConvert.mean + " ms")
     println("Aantal attributen: " + pdp2.evaluate("UserX","view","demo.txt").employedAttributes.size)
     println()
-    printTree(converter.root)
+    printTree(demotree2alt)
   }
   
   def printTree(p:Policy):Unit = {
@@ -76,7 +74,7 @@ object Demo {
   
 }
 
-object DemoTree extends BasicPolicy with GeneralTemplates {
+object DemoTree2 extends BasicPolicy with GeneralTemplates {
   
   import stapl.core.dsl._
   
@@ -84,7 +82,7 @@ object DemoTree extends BasicPolicy with GeneralTemplates {
   subject.rollen = ListAttribute(String)
   resource.type_ = SimpleAttribute(String)
   
-  val demotree = 
+  val demotree2 = 
     Policy("P1") := when (subject.id in environment.werknemer_ids) apply PermitOverrides to (
       Policy("P2") := when("HR" in subject.rollen) apply FirstApplicable to(
        Rule("R1") := permit iff (resource.type_ === "HR_bestand"),
@@ -94,24 +92,20 @@ object DemoTree extends BasicPolicy with GeneralTemplates {
       Rule("R4") := deny
     )
   
-  val demotreeCopy = 
-    Policy("P1") := when (subject.id in environment.werknemer_ids) apply PermitOverrides to (
-      Policy("P2") := when("HR" in subject.rollen) apply FirstApplicable to(
-       Rule("R1") := permit iff (resource.type_ === "HR_bestand"),
-       Rule("R2") := deny
-      ),
-      Rule("R3") := permit iff ("IT" in subject.rollen),
-      Rule("R4") := deny
+  val demotree2alt = 
+    Policy("P1") := when (subject.id in environment.werknemer_ids) apply FirstApplicable to (
+       Rule("R1") := permit iff ("IT" in subject.rollen)|(("HR" in subject.rollen) & (resource.type_ === "HR_bestand")),
+       Rule("R2") := deny 
     )
 }
 
-class DemoAttFinder extends AttributeFinderModule {
+class DemoAttFinder2 extends AttributeFinderModule {
   
   override protected def find(ctx: EvaluationCtx, cType: AttributeContainerType, name: String, aType: AttributeType, multiValued: Boolean): Option[ConcreteValue] = {
     Thread.sleep(2)
     cType match {
       case SUBJECT => name match {
-        case "rollen" => Some(List("HR","Manager"))
+        case "rollen" => Some(List("IT","Manager"))
         case _ => None
       }
       case RESOURCE => name match {

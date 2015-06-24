@@ -40,3 +40,4 @@ build.log
 #SHITTY output not in target directory
 build.log
 *.sh
+src/main/scala/Thesis/Thesisbuild/Demo/Test.scala
