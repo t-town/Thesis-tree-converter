@@ -22,7 +22,11 @@ class TreeConverter(var root: Policy, val knownAttributes : Set[Attribute] = Set
    ****************************************************************************
    ****************************************************************************/
   
-	def reduce(policy : Policy) : Policy = {
+  //ensure compatibility with previous test code
+  def reduce(policy: Policy): Policy = {
+	  reduce(policy,FirstApplicable)
+  }
+	def reduce(policy : Policy,ca: CombinationAlgorithm) : Policy = {
 	  var policyList = List[Policy]()
 	  var reduceList:List[Policy] = Nil
 	  while(hasPolicyChildren(policy)) {
@@ -40,11 +44,11 @@ class TreeConverter(var root: Policy, val knownAttributes : Set[Attribute] = Set
 	  var result = policy
 	  if(policy.subpolicies.length>2)
 	    if(policy.pca == FirstApplicable)
-	       result = reduce(getHighestParent(reduceLeaves(policy)))
+	       result = reduce(getHighestParent(reduceLeaves(policy)),ca)
 	    else
 	    	result = reduceLeaves(policy)
-	  if(result.pca != FirstApplicable)
-	    result = convertCA(result,FirstApplicable)
+	  if(result.pca != ca)
+	    result = convertCA(result,ca)
 	 return result
 	}
 	
@@ -192,6 +196,10 @@ class TreeConverter(var root: Policy, val knownAttributes : Set[Attribute] = Set
 		  return new Policy(startstring + id.toString)(true,Ca,children,List[Obligation]())
 	}
 	
+	
+	/**
+	 * Changed to reflect added conversions: twice the same effect
+	 */
 	def convertCA(policy: Policy, ca: CombinationAlgorithm) : Policy = {
 	  if(policy.pca == ca)
 	   return policy
@@ -199,18 +207,28 @@ class TreeConverter(var root: Policy, val knownAttributes : Set[Attribute] = Set
 	   if(ca == PermitOverrides && policy.pca == DenyOverrides){
 	     if(policy.subpolicies.length == 1){
 	       newpolicy = new Policy(policy.id)(policy.target,PermitOverrides,policy.subpolicies)
-	     }else if(policy.subpolicies(0).asInstanceOf[Rule].effect == Permit){
+	     }else if(policy.subpolicies(0).asInstanceOf[Rule].effect == Permit && policy.subpolicies(1).asInstanceOf[Rule].effect == Deny){
 	       var A:Rule = policy.subpolicies(0).asInstanceOf[Rule]
 	       var B:Rule = policy.subpolicies(1).asInstanceOf[Rule]
 	       var newrule = new Rule(A.id)(Permit,And(A.condition,Not(B.condition)),List[ObligationAction]())
 	       var subpolicies:List[AbstractPolicy] = List(B, newrule)
 	       newpolicy = new Policy(policy.id)(policy.target,PermitOverrides,subpolicies)
-	     }else{
+	     }else if(policy.subpolicies(0).asInstanceOf[Rule].effect == Deny && policy.subpolicies(1).asInstanceOf[Rule].effect == Permit){
 	       var A:Rule = policy.subpolicies(0).asInstanceOf[Rule]
 	       var B:Rule = policy.subpolicies(1).asInstanceOf[Rule]
 	       var newrule = new Rule(B.id)(Permit,And(Not(A.condition),B.condition),List[ObligationAction]())
 	       var subpolicies:List[AbstractPolicy] = List(A, newrule)
 	       newpolicy = new Policy(policy.id)(policy.target,PermitOverrides,subpolicies)
+	     } else {
+	       //Same effect for both rules
+	       var A:Rule = policy.subpolicies(0).asInstanceOf[Rule]
+	       var B:Rule = policy.subpolicies(1).asInstanceOf[Rule]
+	       var effect = A.effect
+	       var oppositeEffect = A.effect.reverse()
+	       var newARule = new Rule(A.id + "|" + B.id)(effect,Or(A.condition,B.condition))
+	       var newBRule = new Rule("AlwaysFalse")(oppositeEffect,AlwaysFalse)
+	       var subPolicies:List[AbstractPolicy] = List(newARule,newBRule)
+	       newpolicy = new Policy(policy.id)(policy.target,PermitOverrides,subPolicies)
 	     }
 	   }else if(ca == PermitOverrides && policy.pca == FirstApplicable){
 	     if(policy.subpolicies.length == 1 || policy.subpolicies(0).asInstanceOf[Rule].effect == Permit ){
@@ -230,18 +248,28 @@ class TreeConverter(var root: Policy, val knownAttributes : Set[Attribute] = Set
 	   }else if(ca == DenyOverrides && policy.pca == PermitOverrides){
 	     if(policy.subpolicies.length == 1){
 	       newpolicy = new Policy(policy.id)(policy.target,PermitOverrides,policy.subpolicies)
-	     }else if(policy.subpolicies(0).asInstanceOf[Rule].effect == Permit){
+	     }else if(policy.subpolicies(0).asInstanceOf[Rule].effect == Permit && policy.subpolicies(1).asInstanceOf[Rule].effect == Deny){
 	       var A:Rule = policy.subpolicies(0).asInstanceOf[Rule]
 	       var B:Rule = policy.subpolicies(1).asInstanceOf[Rule]
 	       var newrule = new Rule(B.id)(Deny,(!A.condition) & B.condition,List[ObligationAction]())	
 	       var subpolicies:List[AbstractPolicy] = List(A, newrule)
 	       newpolicy = new Policy(policy.id)(policy.target,PermitOverrides,subpolicies)
-	     }else{
+	     }else if(policy.subpolicies(0).asInstanceOf[Rule].effect == Deny && policy.subpolicies(1).asInstanceOf[Rule].effect == Permit){
 	       var A:Rule = policy.subpolicies(0).asInstanceOf[Rule]
 	       var B:Rule = policy.subpolicies(1).asInstanceOf[Rule]
 	       var newrule = new Rule(A.id)(Deny,A.condition & (!B.condition),List[ObligationAction]())
 	       var subpolicies:List[AbstractPolicy] = List(newrule,B)
 	       newpolicy = new Policy(policy.id)(policy.target,PermitOverrides,subpolicies)
+	     } else {
+	       //Same effect for both rules
+	       var A:Rule = policy.subpolicies(0).asInstanceOf[Rule]
+	       var B:Rule = policy.subpolicies(1).asInstanceOf[Rule]
+	       var effect = A.effect
+	       var oppositeEffect = A.effect.reverse()
+	       var newARule = new Rule(A.id + "|" + B.id)(effect,Or(A.condition,B.condition))
+	       var newBRule = new Rule("AlwaysFalse")(oppositeEffect,AlwaysFalse)
+	       var subPolicies:List[AbstractPolicy] = List(newARule,newBRule)
+	       newpolicy = new Policy(policy.id)(policy.target,PermitOverrides,subPolicies)
 	     }
 	   }else if(ca == FirstApplicable && policy.pca == PermitOverrides){
 	     if(policy.subpolicies(0).asInstanceOf[Rule].effect == Permit){
